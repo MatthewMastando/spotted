@@ -1,4 +1,4 @@
-export const brand = {
+export const brand = Object.freeze({
   name: "Swipefolio",
   slug: "swipefolio",
   scheme: "swipefolio",
@@ -6,4 +6,4 @@ export const brand = {
   androidPackage: "com.swipefolio.app",
   tagline: "Find your next pick",
   accent: "#C7F36B",
-} as const;
+});
