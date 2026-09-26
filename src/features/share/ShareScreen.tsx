@@ -272,7 +272,6 @@ export function ShareScreen() {
     <Page contentStyle={styles.page}>
       <ScreenHeader
         title="Share result"
-        eyebrow="SHARE PREVIEW"
         backLabel="Close share composer"
         onBack={() => router.back()}
       />

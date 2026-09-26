@@ -87,12 +87,12 @@ describe("discover deck controls", () => {
       </ThemeProvider>,
     );
 
-    await waitFor(() => expect(screen.getByText("Pass · ✕")).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole("button", { name: /^Pass on / })).toBeTruthy());
     expect(
       screen.getByRole("button", { name: "Undo last deck action" }).props
         .accessibilityState?.disabled,
     ).toBe(true);
-    fireEvent.press(screen.getByText("Pass · ✕"));
+    fireEvent.press(screen.getByRole("button", { name: /^Pass on / }));
     await waitFor(async () => {
       expect(
         (await container.deck.getItems("for_you")).some(

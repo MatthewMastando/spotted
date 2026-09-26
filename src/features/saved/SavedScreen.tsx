@@ -173,9 +173,7 @@ export function SavedScreen() {
       ]}
     >
       <ScreenHeader
-        eyebrow="TRACKED IDEAS"
         title="Saved"
-        subtitle="Your discovery prices stay put while the demo market moves."
       />
       {settings.sampleJourney ? (
         <InlineNotice>

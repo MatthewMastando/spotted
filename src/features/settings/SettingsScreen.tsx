@@ -108,7 +108,6 @@ export function SettingsScreen() {
   return (
     <Page>
       <ScreenHeader
-        eyebrow="CONTROL ROOM"
         title="Settings"
         subtitle="Tune the demo, then jump back into discovery."
         onBack={() => router.back()}

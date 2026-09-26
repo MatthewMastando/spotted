@@ -200,7 +200,6 @@ export function AllocationScreen() {
       <View style={styles.header}>
         <ScreenHeader
           title="Build your paper portfolio"
-          eyebrow="PAPER ALLOCATION"
           backLabel="Close allocation"
           onBack={() => router.back()}
         />

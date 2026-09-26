@@ -33,7 +33,6 @@ import { Sparkline } from "@/components/Chart";
 import {
   ActionButton,
   AppText,
-  Chip,
   Panel,
   SectionTitle,
 } from "@/components/ui";
@@ -115,46 +114,50 @@ export function AssetCard({
             !clipContent ? styles.cardUnclipped : null,
           ]}
         >
-          <AppText variant="small" color={palette.accent} numberOfLines={1}>
-            {reason}
-          </AppText>
-          <View style={styles.identityRow}>
-            <View
-              style={[
-                styles.assetIcon,
-                { backgroundColor: asset.iconColor },
-              ]}
-            >
-              <AppText variant="label" color="#10130D">
-                {asset.iconInitials}
-              </AppText>
+          <View style={styles.top}>
+            <AppText variant="caption" color={palette.textMuted} numberOfLines={1}>
+              {reason}
+            </AppText>
+            <View style={styles.identityRow}>
+              <View
+                style={[
+                  styles.assetIcon,
+                  { backgroundColor: asset.iconColor },
+                ]}
+              >
+                <AppText variant="label" color="#10130D">
+                  {asset.iconInitials}
+                </AppText>
+              </View>
+              <View style={styles.assetIdentity}>
+                <AppText variant="title" numberOfLines={largeText ? undefined : 2}>
+                  {asset.name}
+                </AppText>
+                <AppText variant="small" color={palette.textSecondary}>
+                  {asset.ticker} · {TYPE_LABELS[asset.type]} ·{" "}
+                  {THEME_LABELS[asset.themes[0]]}
+                </AppText>
+              </View>
             </View>
-            <View style={styles.assetIdentity}>
-              <AppText variant="title">{asset.name}</AppText>
-              <AppText variant="small" color={palette.textSecondary}>
-                {asset.ticker} · {TYPE_LABELS[asset.type]}
-              </AppText>
-            </View>
-            <Chip label={THEME_LABELS[asset.themes[0]]} />
           </View>
 
           <View style={styles.priceRow}>
             <View style={styles.priceCopy}>
-              <AppText variant="display" style={styles.price}>
+              <AppText variant="hero" style={styles.price}>
                 {data.displayPrice
                   ? formatPrice(data.displayPrice)
                   : "Price unavailable"}
               </AppText>
-              <AppText variant="small" color={palette.textSecondary}>
+              <AppText variant="caption" color={palette.textMuted}>
                 USD · {quoteAsOfLabel(data.quote)}
               </AppText>
             </View>
             <View style={styles.dailyChange}>
-              <AppText variant="label" color={palette.textMuted}>
-                DAILY
-              </AppText>
               <AppText variant="number" color={dayColor}>
                 {dailyReturn === null ? "Unavailable" : formatPercent(dailyReturn)}
+              </AppText>
+              <AppText variant="caption" color={palette.textMuted}>
+                Today
               </AppText>
             </View>
           </View>
@@ -162,6 +165,7 @@ export function AssetCard({
           <View style={styles.copyBlock}>
             <AppText
               variant="small"
+              color={palette.textSecondary}
               numberOfLines={largeText ? undefined : 2}
             >
               {asset.description}
@@ -169,7 +173,6 @@ export function AssetCard({
             {showThesis ? (
               <AppText
                 variant="small"
-                color={palette.accent}
                 numberOfLines={largeText ? undefined : 2}
               >
                 {asset.thesis}
@@ -186,15 +189,15 @@ export function AssetCard({
                 accessibilityHint="Explain this metric"
                 onPress={() => setSelectedMetric(metric)}
                 disabled={!interactive}
-                style={[
-                  styles.metric,
-                  { backgroundColor: palette.surfaceRaised },
-                ]}
+                hitSlop={6}
+                style={styles.metric}
               >
                 <AppText
-                  variant="label"
+                  variant="caption"
                   color={palette.textMuted}
-                  numberOfLines={1}
+                  numberOfLines={largeText ? undefined : 1}
+                  adjustsFontSizeToFit={!largeText}
+                  minimumFontScale={0.85}
                 >
                   {metric.label}
                 </AppText>
@@ -203,9 +206,12 @@ export function AssetCard({
             ))}
           </View>
 
-          <View style={styles.socialBlock}>
-            <View style={styles.socialHeader}>
-              <AppText variant="label">SOCIAL ATTENTION</AppText>
+          <View style={[styles.footer, { borderTopColor: palette.separator }]}>
+            <View
+              accessible
+              accessibilityLabel={`Social attention: ${attention.label}, mentions over the last 30 days`}
+              style={styles.socialRow}
+            >
               <AppText
                 variant="small"
                 color={palette.textSecondary}
@@ -214,40 +220,36 @@ export function AssetCard({
               >
                 {attention.label}
               </AppText>
+              {showSparkline ? (
+                <View style={styles.sparkline}>
+                  {data.social ? (
+                    <Sparkline
+                      values={data.social.history.map((point) => String(point.count))}
+                      color={palette.textSecondary}
+                      height={24}
+                      label={`30-day social attention history for ${asset.ticker}`}
+                    />
+                  ) : (
+                    <AppText variant="caption" color={palette.textMuted}>
+                      No history
+                    </AppText>
+                  )}
+                </View>
+              ) : null}
             </View>
-            {showSparkline ? (
-              <>
-                {data.social ? (
-                  <Sparkline
-                    values={data.social.history.map((point) => String(point.count))}
-                    color={palette.accent}
-                    height={20}
-                    label={`30-day social attention history for ${asset.ticker}`}
-                  />
-                ) : (
-                  <AppText variant="small" color={palette.textMuted}>
-                    No history
-                  </AppText>
-                )}
-                <AppText variant="small" color={palette.textMuted}>
-                  Mentions, last 30 days
-                </AppText>
-              </>
-            ) : null}
-          </View>
-
-          <View style={[styles.risk, { borderTopColor: palette.border }]}>
-            <AppText variant="label" color={palette.warning}>
-              RISK
-            </AppText>
-            <AppText
-              variant="small"
-              color={palette.textSecondary}
-              numberOfLines={1}
-              style={styles.riskCopy}
-            >
-              {asset.risk}
-            </AppText>
+            <View style={styles.risk}>
+              <AppText variant="caption" color={palette.warning}>
+                Risk
+              </AppText>
+              <AppText
+                variant="caption"
+                color={palette.textSecondary}
+                numberOfLines={largeText ? undefined : 2}
+                style={styles.riskCopy}
+              >
+                {asset.risk}
+              </AppText>
+            </View>
           </View>
         </Panel>
       </Pressable>
@@ -366,67 +368,66 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     justifyContent: "space-between",
-    gap: 2,
-    padding: 8,
+    gap: 14,
+    padding: 22,
+    borderRadius: 28,
     overflow: "hidden",
   },
   cardUnclipped: { overflow: "visible" },
+  top: { gap: 12 },
   identityRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
   },
   assetIcon: {
-    width: 40,
-    minHeight: 40,
+    width: 44,
+    minHeight: 44,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
-  assetIdentity: { flex: 1, gap: 3 },
+  assetIdentity: { flex: 1, gap: 2 },
   priceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
     gap: 12,
   },
-  priceCopy: { flex: 1, gap: 4 },
-  price: { fontSize: 26, lineHeight: 32 },
-  dailyChange: { alignItems: "flex-end", gap: 4 },
-  copyBlock: { gap: 2 },
-  metrics: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
+  priceCopy: { flex: 1, gap: 2 },
+  price: { fontSize: 34, lineHeight: 40 },
+  dailyChange: { alignItems: "flex-end", gap: 2, paddingBottom: 2 },
+  copyBlock: { gap: 8 },
+  metrics: { flexDirection: "row", flexWrap: "wrap", columnGap: 16, rowGap: 12 },
   metric: {
     flexGrow: 1,
-    flexBasis: "30%",
-    minWidth: 92,
-    minHeight: 48,
-    borderRadius: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    justifyContent: "space-between",
-    gap: 3,
+    flexBasis: "28%",
+    minWidth: 84,
+    gap: 2,
   },
-  socialBlock: { gap: 1 },
-  socialHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  attentionLabel: { flexShrink: 1, textAlign: "right" },
-  risk: {
+  footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 4,
+    paddingTop: 12,
+    gap: 8,
+  },
+  socialRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 16,
+  },
+  attentionLabel: { flexShrink: 1 },
+  sparkline: { flex: 1, maxWidth: 120, marginLeft: "auto" },
+  risk: {
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 8,
   },
   riskCopy: { flex: 1 },
   modalScrim: {
     flex: 1,
     justifyContent: "flex-end",
-    padding: 20,
+    padding: 16,
     backgroundColor: "rgba(0,0,0,0.6)",
   },
-  modalPanel: { padding: 22, gap: 16 },
+  modalPanel: { padding: 24, gap: 16 },
 });

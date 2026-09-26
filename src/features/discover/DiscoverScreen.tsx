@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
+  Modal,
   Pressable,
   PixelRatio,
   ScrollView,
@@ -21,10 +22,12 @@ import {
   AppText,
   Chip,
   Field,
+  IconButton,
   InlineNotice,
   Page,
   Panel,
   ScreenHeader,
+  Segmented,
 } from "@/components/ui";
 import type { AssetCardData } from "./AssetCard";
 import { THEME_LABELS } from "@/domain/themeLabels";
@@ -63,6 +66,7 @@ export function DiscoverScreen() {
   const [themeFilter, setThemeFilter] = useState<ThemeId | null>(null);
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [themesOpen, setThemesOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [undoAvailable, setUndoAvailable] = useState(false);
@@ -294,40 +298,23 @@ export function DiscoverScreen() {
     >
       <ScreenHeader
         title="Discover"
-        demoInline
         right={
           <View style={styles.headerActions}>
-            <ActionButton
-              variant="secondary"
+            <IconButton
+              icon={searchOpen ? "close" : "magnify"}
               accessibilityLabel="Search ideas"
               accessibilityHint="Show search for all ideas, including passed ideas"
               onPress={() => {
                 if (searchOpen) closeSearch();
                 else setSearchOpen(true);
               }}
-              style={styles.iconButton}
-            >
-              <MaterialCommunityIcons
-                name={searchOpen ? "close" : "magnify"}
-                size={22}
-                color={palette.text}
-                accessible={false}
-              />
-            </ActionButton>
-            <ActionButton
-              variant="secondary"
+            />
+            <IconButton
+              icon="cog-outline"
               accessibilityLabel="Open Settings"
               accessibilityHint="Change app preferences and demo controls"
               onPress={() => router.push("/settings")}
-              style={styles.iconButton}
-            >
-              <MaterialCommunityIcons
-                name="cog-outline"
-                size={22}
-                color={palette.text}
-                accessible={false}
-              />
-            </ActionButton>
+            />
           </View>
         }
       />
@@ -368,32 +355,16 @@ export function DiscoverScreen() {
         />
       ) : (
         <>
-          <View
-            accessibilityRole="tablist"
+          <Segmented
             accessibilityLabel="Deck mode"
-            style={[styles.modeGroup, { backgroundColor: palette.surfaceRaised }]}
-          >
-            {MODES.map((item) => (
-              <Pressable
-                key={item.value}
-                accessibilityRole="tab"
-                accessibilityLabel={`${item.label} deck`}
-                accessibilityState={{ selected: mode === item.value }}
-                onPress={() => setMode(item.value)}
-                style={[
-                  styles.modeButton,
-                  mode === item.value && { backgroundColor: palette.accent },
-                ]}
-              >
-                <AppText
-                  variant="label"
-                  color={mode === item.value ? palette.background : palette.text}
-                >
-                  {item.label}
-                </AppText>
-              </Pressable>
-            ))}
-          </View>
+            options={MODES.map((item) => ({
+              value: item.value,
+              label: item.label,
+              accessibilityLabel: `${item.label} deck`,
+            }))}
+            value={mode}
+            onChange={setMode}
+          />
 
           <ScrollView
             horizontal
@@ -410,22 +381,21 @@ export function DiscoverScreen() {
                 onPress={() => setTypeFilter(filter.value)}
               />
             ))}
-            <View style={[styles.filterDivider, { backgroundColor: palette.border }]} />
-            {THEMES.map((theme) => (
-              <Chip
-                key={theme}
-                label={THEME_LABELS[theme]}
-                selected={themeFilter === theme}
-                accessibilityHint={`Filter ideas by ${THEME_LABELS[theme]}`}
-                onPress={() =>
-                  setThemeFilter((selected) => selected === theme ? null : theme)
-                }
-              />
-            ))}
+            <Chip
+              label={themeFilter ? THEME_LABELS[themeFilter] : "Themes"}
+              accessibilityLabel={
+                themeFilter
+                  ? `Theme filter: ${THEME_LABELS[themeFilter]}`
+                  : "Choose a theme"
+              }
+              accessibilityHint="Open theme filters"
+              selected={themeFilter !== null}
+              onPress={() => setThemesOpen(true)}
+            />
           </ScrollView>
 
           {activeIdeas.data && activeIdeas.data.length >= 3 && !ctaDismissed ? (
-            <View style={[styles.allocationCta, { borderColor: palette.border }]}>
+            <View style={[styles.allocationCta, { backgroundColor: palette.surface }]}>
               <AppText
                 variant="small"
                 numberOfLines={1}
@@ -536,47 +506,86 @@ export function DiscoverScreen() {
           </View>
 
           <View style={styles.actionRow}>
-            <ActionButton
-              variant="secondary"
+            <Pressable
               testID="discover-pass"
+              accessibilityRole="button"
               accessibilityLabel={`Pass on ${current?.asset.ticker ?? "idea"}`}
               accessibilityHint="Remove this idea from your current deck"
+              accessibilityState={{ disabled: pending || !current }}
               disabled={pending || !current}
               onPress={() => void performAction("pass")}
-              style={styles.actionButton}
+              style={({ pressed }) => [
+                styles.roundAction,
+                {
+                  backgroundColor: palette.surfaceRaised,
+                  opacity: pending || !current ? 0.4 : pressed ? 0.7 : 1,
+                },
+              ]}
             >
-              Pass · ✕
-            </ActionButton>
-            <ActionButton
-              variant="secondary"
+              <MaterialCommunityIcons
+                name="close"
+                size={28}
+                color={palette.negative}
+                accessible={false}
+              />
+            </Pressable>
+            <Pressable
               testID="discover-undo"
+              accessibilityRole="button"
               accessibilityLabel="Undo last deck action"
               accessibilityHint="Undo the most recent save or pass if it is still eligible"
+              accessibilityState={{ disabled: pending || !undoAvailable }}
               disabled={pending || !undoAvailable}
               onPress={() => void undoLatest()}
-              style={styles.undoButton}
+              style={({ pressed }) => [
+                styles.undoAction,
+                {
+                  backgroundColor: palette.surface,
+                  opacity: pending || !undoAvailable ? 0.35 : pressed ? 0.7 : 1,
+                },
+              ]}
             >
               <MaterialCommunityIcons
                 name="undo-variant"
-                size={21}
-                color={palette.text}
+                size={20}
+                color={palette.textSecondary}
                 accessible={false}
               />
-            </ActionButton>
-            <ActionButton
+            </Pressable>
+            <Pressable
               testID="discover-save"
+              accessibilityRole="button"
               accessibilityLabel={`Save ${current?.asset.ticker ?? "idea"}`}
               accessibilityHint={
                 currentData?.displayPrice
                   ? `Track the current demo price of ${formatPrice(currentData.displayPrice)}`
                   : "Saving is disabled because no price is available"
               }
+              accessibilityState={{
+                disabled: pending || !current || currentData?.displayPrice === null,
+              }}
               disabled={pending || !current || currentData?.displayPrice === null}
               onPress={() => void performAction("save")}
-              style={styles.actionButton}
+              style={({ pressed }) => [
+                styles.roundAction,
+                {
+                  backgroundColor: palette.accent,
+                  opacity:
+                    pending || !current || currentData?.displayPrice === null
+                      ? 0.4
+                      : pressed
+                        ? 0.8
+                        : 1,
+                },
+              ]}
             >
-              Save · ♥
-            </ActionButton>
+              <MaterialCommunityIcons
+                name="heart"
+                size={26}
+                color="#10130D"
+                accessible={false}
+              />
+            </Pressable>
           </View>
           {currentData?.displayPrice === null ? (
             <AppText variant="small" color={palette.textSecondary}>
@@ -599,6 +608,54 @@ export function DiscoverScreen() {
       {activeIdeas.error ? (
         <InlineNotice>{activeIdeas.error.message}</InlineNotice>
       ) : null}
+      <Modal
+        visible={themesOpen}
+        transparent
+        animationType={reducedMotion ? "none" : "slide"}
+        onRequestClose={() => setThemesOpen(false)}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close theme filters"
+          onPress={() => setThemesOpen(false)}
+          style={styles.sheetScrim}
+        />
+        <View style={[styles.sheet, { backgroundColor: palette.surface }]}>
+          <View style={styles.sheetHeader}>
+            <AppText variant="headline">Themes</AppText>
+            <ActionButton
+              variant="quiet"
+              accessibilityLabel="Done choosing themes"
+              onPress={() => setThemesOpen(false)}
+              style={styles.sheetDone}
+            >
+              Done
+            </ActionButton>
+          </View>
+          <View style={styles.themeGrid}>
+            <Chip
+              label="All themes"
+              selected={themeFilter === null}
+              onPress={() => {
+                setThemeFilter(null);
+                setThemesOpen(false);
+              }}
+            />
+            {THEMES.map((theme) => (
+              <Chip
+                key={theme}
+                label={THEME_LABELS[theme]}
+                selected={themeFilter === theme}
+                accessibilityHint={`Filter ideas by ${THEME_LABELS[theme]}`}
+                onPress={() => {
+                  setThemeFilter((selected) => (selected === theme ? null : theme));
+                  setThemesOpen(false);
+                }}
+              />
+            ))}
+          </View>
+        </View>
+      </Modal>
     </Page>
   );
 }
@@ -670,13 +727,12 @@ function SearchResults({
 const styles = StyleSheet.create({
   screenContent: {
     flex: 1,
-    gap: 10,
-    paddingTop: 10,
-    paddingBottom: 12,
+    gap: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
-  scrollContent: { gap: 12, paddingTop: 10, paddingBottom: 32 },
+  scrollContent: { gap: 20, paddingTop: 8, paddingBottom: 40 },
   headerActions: { flexDirection: "row", gap: 8 },
-  iconButton: { width: 48, minHeight: 48, paddingHorizontal: 0 },
   searchInputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -684,28 +740,13 @@ const styles = StyleSheet.create({
   },
   searchField: { flex: 1 },
   clearButton: { minWidth: 48, paddingHorizontal: 8 },
-  modeGroup: {
-    flexDirection: "row",
-    borderRadius: 18,
-    padding: 4,
-    gap: 4,
-  },
-  modeButton: {
-    flex: 1,
+  chipScroll: { flexGrow: 0, flexShrink: 0 },
+  filterRow: { gap: 7, alignItems: "center", paddingVertical: 2 },
+  allocationCta: {
     minHeight: 44,
     borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 8,
-  },
-  chipScroll: { flexGrow: 0, flexShrink: 0 },
-  filterRow: { gap: 8, alignItems: "center", paddingVertical: 2 },
-  filterDivider: { width: 1, height: 24, marginHorizontal: 3 },
-  allocationCta: {
-    minHeight: 38,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 14,
-    paddingHorizontal: 8,
+    paddingLeft: 16,
+    paddingRight: 8,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -719,15 +760,42 @@ const styles = StyleSheet.create({
   deckArea: { minHeight: 280 },
   deckAreaFill: { flex: 1, minHeight: 0 },
   deckAreaLarge: { minHeight: 640 },
-  actionRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  actionButton: { flex: 1, minHeight: 52 },
-  undoButton: {
-    width: 52,
-    height: 52,
-    minHeight: 52,
-    borderRadius: 26,
-    paddingHorizontal: 0,
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 28,
   },
+  roundAction: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  undoAction: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetScrim: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)" },
+  sheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 48,
+    gap: 20,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  sheetDone: { minHeight: 44, paddingHorizontal: 8 },
+  themeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   emptyPanel: { gap: 12, marginTop: 10 },
   emptyActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   toast: {

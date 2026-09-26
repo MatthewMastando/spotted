@@ -155,9 +155,7 @@ export function PortfolioScreen() {
   return (
     <Page contentStyle={styles.pageContent}>
       <ScreenHeader
-        eyebrow="PAPER ACCOUNT"
         title="Portfolio"
-        subtitle="A simulated ledger with a $10,000 starting balance."
       />
       {settings.sampleJourney ? (
         <InlineNotice>

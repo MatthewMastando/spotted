@@ -190,10 +190,7 @@ export function DeckGestureStack({
           pointerEvents="none"
           style={[
             styles.peek,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.border,
-            },
+            { backgroundColor: palette.surface },
           ]}
         >
           <View style={[styles.peekIcon, { backgroundColor: next.asset.iconColor }]}>
@@ -256,15 +253,15 @@ export function DeckGestureStack({
 }
 
 const styles = StyleSheet.create({
-  stack: { position: "relative", flex: 1, paddingTop: 12 },
+  stack: { position: "relative", flex: 1, paddingTop: 10 },
   peek: {
     position: "absolute",
     top: 0,
-    left: 8,
-    right: 8,
+    left: 14,
+    right: 14,
     minHeight: 88,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 24,
+    opacity: 0.55,
     padding: 16,
     flexDirection: "row",
     alignItems: "flex-start",
