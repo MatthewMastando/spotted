@@ -237,9 +237,8 @@ export function AllocationScreen() {
           backLabel="Close allocation"
           onBack={() => router.back()}
         />
-        <AppText variant="body" color={palette.textSecondary}>
-          Choose dollar amounts. Your fill uses the current eligible mock quote,
-          never the price you originally saved.
+        <AppText variant="caption" color={palette.textSecondary}>
+          Fills use the current mock quote, not the price you saved.
         </AppText>
         {portfolio.loading && !portfolio.data ? (
           <AppText variant="body" color={palette.textSecondary}>
@@ -408,7 +407,6 @@ function AllocationRowCard({
             onChangeText={onChange}
             style={styles.amountField}
           />
-          <AppText variant="caption">USD</AppText>
           <IconButton
             icon="close"
             accessibilityLabel={`Remove ${row.asset.ticker} from allocation`}
@@ -444,5 +442,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
   },
-  amountField: { width: 92, fontSize: 18 },
+  amountField: {
+    width: 112,
+    fontSize: 17,
+    textAlign: "right",
+  },
 });

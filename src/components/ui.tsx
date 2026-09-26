@@ -414,6 +414,7 @@ export function IconButton({
   disabled,
   testID,
   variant = "filled",
+  size = "md",
   stopPropagation = false,
 }: {
   icon: ComponentProps<typeof MaterialCommunityIcons>["name"];
@@ -423,6 +424,7 @@ export function IconButton({
   disabled?: boolean;
   testID?: string;
   variant?: "filled" | "plain";
+  size?: "md" | "sm";
   stopPropagation?: boolean;
 }) {
   const palette = usePalette();
@@ -441,6 +443,7 @@ export function IconButton({
       hitSlop={4}
       style={({ pressed }) => [
         styles.iconButton,
+        size === "sm" ? styles.iconButtonSmall : null,
         {
           backgroundColor:
             variant === "filled" ? palette.surfaceRaised : "transparent",
@@ -450,7 +453,7 @@ export function IconButton({
     >
       <MaterialCommunityIcons
         name={icon}
-        size={variant === "plain" ? 26 : 20}
+        size={size === "sm" ? 20 : variant === "plain" ? 26 : 20}
         color={palette.text}
         accessible={false}
       />
@@ -611,6 +614,7 @@ export function ListRow({
   subtitle,
   leading,
   trailing,
+  titleTrailing,
   onPress,
   accessibilityLabel,
   accessibilityHint,
@@ -619,11 +623,14 @@ export function ListRow({
   chevron = false,
   disabled = false,
   testID,
+  titleVariant = "body",
+  titleNumberOfLines,
 }: {
   title: string;
   subtitle?: ReactNode;
   leading?: ReactNode;
   trailing?: ReactNode;
+  titleTrailing?: ReactNode;
   onPress?: () => void;
   accessibilityLabel?: string;
   accessibilityHint?: string;
@@ -632,18 +639,35 @@ export function ListRow({
   chevron?: boolean;
   disabled?: boolean;
   testID?: string;
+  titleVariant?: TextVariant;
+  titleNumberOfLines?: number;
 }) {
   const palette = usePalette();
   const content = (
     <>
       {leading}
       <View style={styles.rowCopy}>
-        <AppText
-          variant="body"
-          color={destructive ? palette.negative : palette.text}
-        >
-          {title}
-        </AppText>
+        {titleTrailing ? (
+          <View style={styles.rowTitle}>
+            <AppText
+              variant={titleVariant}
+              numberOfLines={titleNumberOfLines}
+              style={styles.rowTitleText}
+              color={destructive ? palette.negative : palette.text}
+            >
+              {title}
+            </AppText>
+            {titleTrailing}
+          </View>
+        ) : (
+          <AppText
+            variant={titleVariant}
+            numberOfLines={titleNumberOfLines}
+            color={destructive ? palette.negative : palette.text}
+          >
+            {title}
+          </AppText>
+        )}
         {typeof subtitle === "string" ? (
           <AppText variant="small" color={palette.textSecondary}>
             {subtitle}
@@ -849,6 +873,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  iconButtonSmall: { width: 36, height: 36, borderRadius: 18 },
   navBar: {
     minHeight: 44,
     flexDirection: "row",
@@ -885,5 +910,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   rowCopy: { flex: 1, gap: 2 },
+  rowTitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  rowTitleText: { flexShrink: 1 },
   section: { gap: 16 },
 });

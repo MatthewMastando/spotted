@@ -458,15 +458,39 @@ function HoldingCard({
     <ListRow
       first={first}
       title={asset.ticker}
+      titleVariant="headline"
+      titleNumberOfLines={1}
+      titleTrailing={
+        <View style={styles.holdingValues}>
+          <AppText variant="number" numberOfLines={1}>
+            {formatMoney(holding.value)}
+          </AppText>
+          <AppText
+            variant="caption"
+            numberOfLines={1}
+            color={pnlColor(holding.unrealized, palette)}
+          >
+            {formatMoney(holding.unrealized)} ·{" "}
+            {formatPercent(holding.positionReturn)}
+          </AppText>
+        </View>
+      }
       subtitle={
         <View style={styles.holdingSubtitle}>
-          <AppText variant="small" color={palette.textSecondary}>
-            {asset.name} · {TYPE_LABELS[asset.type]}
+          <AppText
+            variant="small"
+            color={palette.textSecondary}
+            numberOfLines={1}
+          >
+            {asset.name}
           </AppText>
-          <AppText variant="caption" color={palette.textSecondary}>
-            {formatNumber(holding.units, 6)} units · Avg entry{" "}
-            {formatPrice(holding.avgEntry)} · Invested{" "}
-            {formatMoney(holding.costBasis)}
+          <AppText
+            variant="caption"
+            color={palette.textSecondary}
+            numberOfLines={1}
+          >
+            {formatNumber(holding.units, 6)} units · Avg{" "}
+            {formatPrice(holding.avgEntry)}
           </AppText>
           {holding.stale ? (
             <AppText variant="caption" color={palette.textSecondary}>
@@ -483,24 +507,13 @@ function HoldingCard({
       }
       trailing={
         <View style={styles.holdingTrailing}>
-          <View style={styles.holdingValues}>
-            <AppText variant="number" numberOfLines={1}>
-              {formatMoney(holding.value)}
-            </AppText>
-            <AppText
-              variant="caption"
-              numberOfLines={1}
-              color={pnlColor(holding.unrealized, palette)}
-            >
-              {formatMoney(holding.unrealized)} ·{" "}
-              {formatPercent(holding.positionReturn)}
-            </AppText>
-          </View>
           <IconButton
             icon="share-variant"
             accessibilityLabel={`Share ${asset.ticker} position`}
             onPress={onShare}
             testID="portfolio-share-position"
+            variant="plain"
+            size="sm"
             stopPropagation
           />
           <IconButton
@@ -508,6 +521,8 @@ function HoldingCard({
             accessibilityLabel={`More actions for ${asset.ticker} position`}
             onPress={onMore}
             disabled={closing}
+            variant="plain"
+            size="sm"
             stopPropagation
           />
         </View>

@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { AssetFixture, SavedIdea } from "@/domain/types";
-import { formatDate, formatMoney, formatPercent, formatPrice } from "@/domain/format";
+import { formatDate, formatPercent, formatPrice } from "@/domain/format";
 import { returnSinceSave } from "@/domain/returns";
 import { socialAttention } from "@/domain/social";
 import { usePalette } from "@/design/theme";
@@ -466,10 +466,8 @@ function SavedRowCard({
         ? palette.textSecondary
         : palette.positive;
   const savedCaption = [
-    `Saved ${formatDate(row.saved.savedAt)} at ${formatPrice(row.saved.savedPrice)}`,
-    row.funded
-      ? `Funded${row.fundedAmount ? ` ${formatMoney(row.fundedAmount)}` : ""}`
-      : "Not funded",
+    `Saved ${formatPrice(row.saved.savedPrice)} · ${formatDate(row.saved.savedAt)}`,
+    row.funded ? "Funded" : null,
     row.stale ? "Stale valuation" : null,
   ]
     .filter(Boolean)
@@ -479,13 +477,38 @@ function SavedRowCard({
     <ListRow
       first={first}
       title={row.asset.name}
+      titleNumberOfLines={1}
       subtitle={
         <View style={styles.rowSubtitle}>
-          <AppText variant="small" color={palette.textSecondary}>
+          <AppText
+            variant="small"
+            color={palette.textSecondary}
+            numberOfLines={1}
+          >
             {row.asset.ticker} · {typeLabel}
           </AppText>
-          <AppText variant="caption" color={palette.textSecondary}>
+          <AppText
+            variant="caption"
+            color={palette.textSecondary}
+            numberOfLines={1}
+          >
             {savedCaption}
+          </AppText>
+        </View>
+      }
+      titleTrailing={
+        <View style={styles.trailingValues}>
+          <AppText variant="number" numberOfLines={1}>
+            {row.currentPrice ? formatPrice(row.currentPrice) : "Unavailable"}
+          </AppText>
+          <AppText
+            variant="caption"
+            color={returnColor}
+            numberOfLines={1}
+          >
+            {row.returnValue === null
+              ? "Unavailable"
+              : formatPercent(row.returnValue)}
           </AppText>
         </View>
       }
@@ -519,29 +542,15 @@ function SavedRowCard({
         </View>
       }
       trailing={
-        <View style={styles.trailing}>
-          <View style={styles.trailingValues}>
-            <AppText variant="number" numberOfLines={1}>
-              {row.currentPrice ? formatPrice(row.currentPrice) : "Unavailable"}
-            </AppText>
-            <AppText
-              variant="caption"
-              color={returnColor}
-              numberOfLines={1}
-            >
-              {row.returnValue === null
-                ? "Unavailable"
-                : formatPercent(row.returnValue)}
-            </AppText>
-          </View>
-          <IconButton
-            icon="dots-horizontal"
-            accessibilityLabel={`More actions for ${row.asset.ticker}`}
-            disabled={pending}
-            onPress={onMenu}
-            stopPropagation
-          />
-        </View>
+        <IconButton
+          icon="dots-horizontal"
+          accessibilityLabel={`More actions for ${row.asset.ticker}`}
+          disabled={pending}
+          onPress={onMenu}
+          variant="plain"
+          size="sm"
+          stopPropagation
+        />
       }
       onPress={onDetails}
       accessibilityLabel={`Open ${row.asset.name} details`}
@@ -569,8 +578,8 @@ const styles = StyleSheet.create({
   rowSubtitle: { gap: 3, flex: 1 },
   rowLeading: { flexDirection: "row", alignItems: "center", gap: 6 },
   checkbox: {
-    width: 32,
-    height: 44,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -580,11 +589,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-  },
-  trailing: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
   },
   trailingValues: {
     minWidth: 66,

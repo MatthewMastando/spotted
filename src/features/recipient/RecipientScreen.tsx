@@ -13,7 +13,11 @@ import {
   ScreenHeader,
 } from "@/components/ui";
 import { Sparkline } from "@/components/Chart";
-import { TYPE_LABELS, THEME_LABELS, quoteAsOfLabel } from "@/features/common/labels";
+import {
+  TYPE_LABELS,
+  THEME_LABELS,
+  quoteAsOfLabel,
+} from "@/features/common/labels";
 import { useContainer } from "@/services/ContainerContext";
 import { createId } from "@/services/ids";
 import { trackEvent } from "@/services/track";
@@ -125,16 +129,16 @@ export function RecipientScreen() {
           </View>
           <View style={styles.previewCopy}>
             <AppText variant="title">{asset.name}</AppText>
-            <AppText variant="small" color={palette.textSecondary}>
+            <AppText
+              variant="small"
+              color={palette.textSecondary}
+              numberOfLines={1}
+            >
               {asset.ticker} · {TYPE_LABELS[asset.type]}
+              {asset.themes[0] ? ` · ${THEME_LABELS[asset.themes[0]]}` : ""}
             </AppText>
           </View>
-          <Chip label="Sample" selected />
-        </View>
-        <View style={styles.themeRow}>
-          {asset.themes.map((theme) => (
-            <Chip key={theme} label={THEME_LABELS[theme]} />
-          ))}
+          <Chip label="Sample" selected={false} />
         </View>
         <AppText variant="body">{asset.description}</AppText>
         <AppText variant="body">
@@ -228,7 +232,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   previewCopy: { flex: 1, gap: 3 },
-  themeRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   priceBlock: { gap: 3 },
   sparklineContainer: { width: "100%", minWidth: 0, overflow: "hidden" },
   recoveryNotice: { gap: 8 },
