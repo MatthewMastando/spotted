@@ -64,6 +64,10 @@ If a quote is missing, valuation uses the latest valid price at or before the va
 marks the position stale. A missing quote is never treated as zero. All holdings in a valuation
 use the same mock-clock instant.
 
+The portfolio chart uses account equity (cash plus holdings) and a fixed `$10,000` starting
+balance baseline. Asset-class and primary-theme concentration use each group's current paper value
+divided by total invested value; theme membership is attributed to the fixture's first theme.
+
 ## Allocation rules
 
 Each allocation must be at least `$1.00`, positive, have at most two decimal places, use a unique
@@ -76,3 +80,14 @@ An equal split floors each share to cents and gives remainder cents to earlier l
 Confirmations use the stable idempotency key `${reviewId}:${assetId}`. Full closes use
 `close:${assetId}:${openLotFirstTxId}`. Retrying either action must not append a duplicate
 transaction.
+
+Money and price formatting groups integer digits in the rendered string only. Share-of-portfolio
+labels are unsigned percentages rounded to one decimal place; these display formats do not alter
+allocation amounts or ledger values.
+
+## Share cards
+
+Idea cards show return since the saved quote and a hypothetical `$1,000` illustration based on that
+return. Position and portfolio cards show paper-ledger results. The chart is built from the
+snapshot's captured price/equity history, and its displayed `As of` label uses the snapshot time and
+demo-clock day when available. Export persists the same frozen snapshot shown in the preview.
