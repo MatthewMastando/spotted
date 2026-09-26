@@ -224,6 +224,7 @@ export function SavedScreen() {
         </AppText>
         <ScrollView
           horizontal
+          style={styles.chipScroll}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chipRow}
         >
@@ -241,6 +242,7 @@ export function SavedScreen() {
       </View>
       <ScrollView
         horizontal
+        style={styles.chipScroll}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipRow}
       >
@@ -500,6 +502,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  chipScroll: { flexGrow: 0, flexShrink: 0 },
   filterRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   chipRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   multiSelectBar: {

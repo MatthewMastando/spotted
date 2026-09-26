@@ -197,19 +197,20 @@ export function AllocationScreen() {
       ]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScreenHeader
-        title="Allocation"
-        eyebrow="PAPER ALLOCATION"
-        backLabel="Close allocation"
-        onBack={() => router.back()}
-      />
+      <View style={styles.header}>
+        <ScreenHeader
+          title="Build your paper portfolio"
+          eyebrow="PAPER ALLOCATION"
+          backLabel="Close allocation"
+          onBack={() => router.back()}
+        />
+      </View>
       <ScrollView
         style={styles.scroll}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.content}
       >
         <View style={styles.titleCopy}>
-          <AppText variant="display">Build your paper portfolio</AppText>
           <AppText variant="body" color={palette.textSecondary}>
             Choose dollar amounts. Your fill uses the current eligible mock quote,
             never the price you originally saved.
@@ -430,6 +431,7 @@ function parseAssetIds(value: string | undefined): string[] {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  header: { paddingHorizontal: 20 },
   scroll: { flex: 1 },
   content: {
     flexGrow: 1,
