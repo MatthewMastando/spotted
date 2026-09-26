@@ -3,6 +3,15 @@ import type { ShareSnapshot } from "@/domain/types";
 import { AppText } from "@/components/ui";
 
 export type ShareTheme = "lime" | "violet" | "sunset";
+export type ShareCardLayout = "portrait" | "square";
+
+export const SHARE_CARD_DESIGN_SIZES: Record<
+  ShareCardLayout,
+  { width: number; height: number }
+> = {
+  portrait: { width: 360, height: 640 },
+  square: { width: 360, height: 360 },
+};
 
 const THEMES: Record<
   ShareTheme,
@@ -32,12 +41,15 @@ export function ShareCard({
   snapshot,
   theme,
   sampleJourney,
+  layout = "portrait",
 }: {
   snapshot: ShareSnapshot;
   theme: ShareTheme;
   sampleJourney: boolean;
+  layout?: ShareCardLayout;
 }) {
   const colors = THEMES[theme];
+  const square = layout === "square";
   const returnIsNegative = snapshot.raw.return.startsWith("-");
   const resultColor = returnIsNegative ? "#FF8B8B" : colors.positive;
   const title =
@@ -47,38 +59,80 @@ export function ShareCard({
         ? `${snapshot.ticker} paper result`
         : "I spotted this";
   return (
-    <View style={[styles.card, { backgroundColor: colors.background }]}>
+    <View
+      style={[
+        styles.card,
+        square ? styles.cardSquare : null,
+        {
+          width: SHARE_CARD_DESIGN_SIZES[layout].width,
+          height: SHARE_CARD_DESIGN_SIZES[layout].height,
+          backgroundColor: colors.background,
+        },
+      ]}
+    >
       <View style={styles.topRow}>
         <AppText variant="label" color={colors.accent}>
           SWIPEFOLIO
         </AppText>
-        <View style={[styles.demoPill, { borderColor: colors.accent }]}>
+        <View
+          style={[
+            styles.demoPill,
+            square ? styles.demoPillSquare : null,
+            { borderColor: colors.accent },
+          ]}
+        >
           <AppText variant="label" color={colors.accent}>
             DEMO DATA
           </AppText>
         </View>
       </View>
-      <View style={[styles.hero, { backgroundColor: colors.surface }]}>
-        <AppText variant="title" color="#FFFFFF">
+      <View
+        style={[
+          styles.hero,
+          square ? styles.heroSquare : null,
+          { backgroundColor: colors.surface },
+        ]}
+      >
+        <AppText
+          variant="title"
+          color="#FFFFFF"
+          style={square ? styles.heroTitleSquare : null}
+        >
           {title}
         </AppText>
         {snapshot.assetName ? (
-          <AppText variant="body" color="#E8EDE1">
+          <AppText
+            variant="body"
+            color="#E8EDE1"
+            style={square ? styles.heroBodySquare : null}
+          >
             {snapshot.assetName} · {snapshot.ticker}
           </AppText>
         ) : (
-          <AppText variant="body" color="#E8EDE1">
+          <AppText
+            variant="body"
+            color="#E8EDE1"
+            style={square ? styles.heroBodySquare : null}
+          >
             Simulated investing, made tangible
           </AppText>
         )}
-        <AppText variant="title" color={resultColor} style={styles.result}>
+        <AppText
+          variant="title"
+          color={resultColor}
+          style={[styles.result, square ? styles.resultSquare : null]}
+        >
           {snapshot.display.return}
         </AppText>
-        <AppText variant="label" color="#E8EDE1">
+        <AppText
+          variant="label"
+          color="#E8EDE1"
+          style={square ? styles.heroBasisSquare : null}
+        >
           {snapshot.display.basis}
         </AppText>
       </View>
-      <View style={styles.chart}>
+      <View style={[styles.chart, square ? styles.chartSquare : null]}>
         {snapshot.chart.length > 1 ? (
           snapshot.chart.map((point, index) => (
             <View
@@ -101,22 +155,29 @@ export function ShareCard({
           </AppText>
         )}
       </View>
-      <View style={styles.facts}>
+      <View style={[styles.facts, square ? styles.factsSquare : null]}>
         {Object.entries(snapshot.display)
           .filter(([key]) => !["return", "basis"].includes(key))
-          .slice(0, 4)
           .map(([key, value]) => (
-            <View key={key} style={styles.fact}>
-              <AppText variant="label" color="#B9C0B2">
+            <View key={key} style={[styles.fact, square ? styles.factSquare : null]}>
+              <AppText
+                variant="label"
+                color="#B9C0B2"
+                style={square ? styles.factLabelSquare : null}
+              >
                 {key.replace(/([A-Z])/g, " $1").toUpperCase()}
               </AppText>
-              <AppText variant="body" color="#FFFFFF">
+              <AppText
+                variant={square ? "small" : "body"}
+                color="#FFFFFF"
+                style={square ? styles.factValueSquare : null}
+              >
                 {value}
               </AppText>
             </View>
           ))}
       </View>
-      <View style={styles.footer}>
+      <View style={[styles.footer, square ? styles.footerSquare : null]}>
         <AppText variant="small" color="#B9C0B2">
           {sampleJourney
             ? "Sample journey · Simulated · not your track record"
@@ -139,9 +200,12 @@ export function shareThemeColors(theme: ShareTheme) {
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
-    padding: 92,
-    gap: 42,
+    padding: 16,
+    gap: 10,
+  },
+  cardSquare: {
+    padding: 10,
+    gap: 4,
   },
   topRow: {
     flexDirection: "row",
@@ -151,31 +215,55 @@ const styles = StyleSheet.create({
   demoPill: {
     borderWidth: 2,
     borderRadius: 999,
-    paddingHorizontal: 22,
-    paddingVertical: 13,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  demoPillSquare: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
   },
   hero: {
-    borderRadius: 42,
-    padding: 58,
-    gap: 22,
+    borderRadius: 16,
+    padding: 14,
+    gap: 5,
+  },
+  heroSquare: {
+    borderRadius: 12,
+    padding: 8,
+    gap: 3,
   },
   result: {
     fontFamily: "Inter_700Bold",
-    fontSize: 150,
-    lineHeight: 170,
+    fontSize: 44,
+    lineHeight: 50,
     fontVariant: ["tabular-nums"],
   },
+  resultSquare: {
+    fontSize: 30,
+    lineHeight: 34,
+  },
+  heroTitleSquare: { fontSize: 16, lineHeight: 20 },
+  heroBodySquare: { fontSize: 12, lineHeight: 16 },
+  heroBasisSquare: { fontSize: 10, lineHeight: 14 },
   chart: {
-    height: 210,
-    borderBottomWidth: 2,
+    height: 84,
+    borderBottomWidth: 1,
     borderBottomColor: "#65705C",
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 5,
-    paddingHorizontal: 8,
+    gap: 2,
+    paddingHorizontal: 4,
   },
-  chartBar: { flex: 1, minWidth: 3, borderRadius: 3 },
-  facts: { gap: 18 },
-  fact: { gap: 5 },
-  footer: { marginTop: "auto", gap: 9 },
+  chartSquare: {
+    height: 24,
+  },
+  chartBar: { flex: 1, minWidth: 2, borderRadius: 2 },
+  facts: { gap: 10 },
+  factsSquare: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  fact: { gap: 3 },
+  factSquare: { width: "48%", gap: 1 },
+  factLabelSquare: { fontSize: 9, lineHeight: 12 },
+  factValueSquare: { fontSize: 12, lineHeight: 16 },
+  footer: { marginTop: "auto", gap: 5 },
+  footerSquare: { gap: 2 },
 });

@@ -6,6 +6,47 @@ import { Asset, PricePoint, Quote, SavedIdea, ShareSnapshot } from "./types";
 
 const finePrint = "Excludes fees, taxes, dividends. Not investment advice.";
 
+export function presentShareSnapshot(
+  snapshot: ShareSnapshot,
+  theme: string,
+  hideAmounts: boolean,
+): ShareSnapshot {
+  const display: Record<string, string> = {
+    ...snapshot.display,
+    return: formatPercent(snapshot.raw.return),
+    basis: snapshot.display.basis,
+  };
+
+  if (snapshot.kind === "idea") {
+    display.savedPrice = hideAmounts
+      ? "Hidden"
+      : formatPrice(snapshot.raw.savedPrice);
+    display.latestPrice = hideAmounts
+      ? "Hidden"
+      : formatPrice(snapshot.raw.latestPrice);
+    display.hypothetical = hideAmounts
+      ? "Hidden"
+      : formatMoney(snapshot.raw.hypothetical);
+  } else if (snapshot.kind === "position") {
+    display.pnl = hideAmounts ? "Hidden" : formatMoney(snapshot.raw.pnl);
+    display.value = hideAmounts ? "Hidden" : formatMoney(snapshot.raw.value);
+    display.latestPrice = hideAmounts
+      ? "Hidden"
+      : formatPrice(snapshot.raw.currentPrice);
+  } else {
+    display.pnl = hideAmounts ? "Hidden" : formatMoney(snapshot.raw.pnl);
+    display.equity = hideAmounts ? "Hidden" : formatMoney(snapshot.raw.equity);
+    display.cash = hideAmounts ? "Hidden" : formatMoney(snapshot.raw.cash);
+  }
+
+  return {
+    ...snapshot,
+    display,
+    theme,
+    hideAmounts,
+  };
+}
+
 export function buildIdeaShareSnapshot(input: {
   id: string;
   asset: Asset;

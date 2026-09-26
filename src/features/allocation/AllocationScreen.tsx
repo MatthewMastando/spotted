@@ -199,7 +199,7 @@ export function AllocationScreen() {
           Cancel
         </ActionButton>
         <AppText variant="label" color={palette.textMuted}>
-          REVIEW {reviewId.slice(-6)}
+          PAPER ALLOCATION
         </AppText>
       </View>
       <View style={styles.content}>
@@ -331,10 +331,6 @@ export function AllocationScreen() {
                 <AppText variant="number">{formatMoney(remainingCash)}</AppText>
               </View>
             </Panel>
-            <InlineNotice>
-              Confirming creates one idempotent review:{" "}
-              <AppText variant="small">{reviewId}</AppText>
-            </InlineNotice>
             <ActionButton
               loading={pending}
               accessibilityLabel="Confirm paper allocation"

@@ -49,6 +49,10 @@ export class ShareService {
     return this.persist(this.builders.portfolio(input));
   }
 
+  async saveSnapshot(snapshot: ShareSnapshot): Promise<ShareSnapshot> {
+    return this.persist(snapshot);
+  }
+
   get(id: string): Promise<ShareSnapshot | null> {
     return this.snapshots.get(id);
   }

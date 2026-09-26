@@ -14,12 +14,19 @@ import {
   buildIdeaShareSnapshot,
   buildPortfolioShareSnapshot,
   buildPositionShareSnapshot,
+  presentShareSnapshot,
 } from "@/domain/share";
 import { MIN_HISTORY_DAY } from "@/domain/time";
 import { formatDate } from "@/domain/format";
 import { usePalette } from "@/design/theme";
 import { ActionButton, AppText, Chip, InlineNotice, Page, Panel, SectionTitle } from "@/components/ui";
-import { ShareCard, ShareTheme, shareThemeColors } from "./ShareCard";
+import {
+  SHARE_CARD_DESIGN_SIZES,
+  ShareCard,
+  ShareCardLayout,
+  ShareTheme,
+  shareThemeColors,
+} from "./ShareCard";
 import { useContainer } from "@/services/ContainerContext";
 import { createId } from "@/services/ids";
 import { trackEvent } from "@/services/track";
@@ -47,10 +54,13 @@ export function ShareScreen() {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const captureTarget = useRef<View>(null);
+  const [previewFrameWidth, setPreviewFrameWidth] = useState(0);
+  const hapticFired = useRef(false);
   const size = SIZES[layout];
+  const designSize = SHARE_CARD_DESIGN_SIZES[layout];
   const day = settings.clock.dayOffset;
 
-  const snapshot = useMemo<ShareSnapshot | null>(() => {
+  const candidateSnapshot = useMemo<ShareSnapshot | null>(() => {
     const createdAt = container.clock.now();
     if (kind === "idea" || kind === "position") {
       if (!id) return null;
@@ -77,8 +87,8 @@ export function ShareScreen() {
           history,
           createdAt,
           startTime: firstTransaction?.executedAt ?? saved.savedAt,
-          theme,
-          hideAmounts,
+          theme: "lime",
+          hideAmounts: false,
         });
       }
       if (kind !== "idea") return null;
@@ -89,8 +99,8 @@ export function ShareScreen() {
         quote,
         history,
         createdAt,
-        theme,
-        hideAmounts,
+        theme: "lime",
+        hideAmounts: false,
       });
     }
     if (kind === "portfolio" && portfolio.data) {
@@ -101,8 +111,8 @@ export function ShareScreen() {
         history: portfolio.data.history,
         createdAt,
         startTime,
-        theme,
-        hideAmounts,
+        theme: "lime",
+        hideAmounts: false,
       });
     }
     return null;
@@ -110,16 +120,33 @@ export function ShareScreen() {
     activeIdeas.data,
     container,
     day,
-    hideAmounts,
     id,
     kind,
     portfolio.data,
-    theme,
   ]);
 
+  const [frozenSnapshot, setFrozenSnapshot] =
+    useState<ShareSnapshot | null>(null);
   useEffect(() => {
-    if (snapshot) void successHaptic(container);
-  }, [container, snapshot]);
+    if (!frozenSnapshot && candidateSnapshot) {
+      queueMicrotask(() => setFrozenSnapshot(candidateSnapshot));
+    }
+  }, [candidateSnapshot, frozenSnapshot]);
+  const baseSnapshot = frozenSnapshot ?? candidateSnapshot;
+  const snapshot = useMemo(
+    () =>
+      baseSnapshot
+        ? presentShareSnapshot(baseSnapshot, theme, hideAmounts)
+        : null,
+    [baseSnapshot, hideAmounts, theme],
+  );
+
+  useEffect(() => {
+    if (baseSnapshot && !hapticFired.current) {
+      hapticFired.current = true;
+      void successHaptic(container);
+    }
+  }, [baseSnapshot, container]);
 
   if (!snapshot) {
     return (
@@ -137,77 +164,11 @@ export function ShareScreen() {
     );
   }
 
-  const currentSnapshot = snapshot;
-
   async function persistSnapshot(): Promise<ShareSnapshot> {
-    const id = createId("share");
-    if (currentSnapshot.kind === "idea") {
-      const asset = container.assets.getDetails(currentSnapshot.assetId ?? "");
-      const saved = activeIdeas.data?.find((item) => item.assetId === currentSnapshot.assetId);
-      const quote = asset
-        ? container.market.getQuote(asset.id, day)
-        : null;
-      const history = asset
-        ? container.market.getHistory(
-            asset.id,
-            Math.max(MIN_HISTORY_DAY, day - 365),
-            day,
-          )
-        : [];
-      if (!asset || !saved || !quote) throw new Error("The saved idea changed.");
-      return container.shares.createIdeaSnapshot({
-        id,
-        asset,
-        saved,
-        quote,
-        history,
-        createdAt: container.clock.now(),
-        theme,
-        hideAmounts,
-      });
-    }
-    if (currentSnapshot.kind === "position") {
-      const asset = container.assets.getDetails(currentSnapshot.assetId ?? "");
-      const data = portfolio.data;
-      const holding = data?.ledger.holdings.find(
-        (item) => item.assetId === currentSnapshot.assetId,
-      );
-      const saved = activeIdeas.data?.find((item) => item.assetId === currentSnapshot.assetId);
-      const quote = asset ? container.market.getQuote(asset.id, day) : null;
-      const history = asset
-        ? container.market.getHistory(
-            asset.id,
-            Math.max(MIN_HISTORY_DAY, day - 365),
-            day,
-          )
-        : [];
-      if (!asset || !holding || !saved || !quote || !data)
-        throw new Error("The paper position changed.");
-      const firstTransaction = data.transactions.find(
-        (transaction) => transaction.id === holding.firstTransactionId,
-      );
-      return container.shares.createPositionSnapshot({
-        id,
-        asset,
-        holding,
-        quote,
-        history,
-        createdAt: container.clock.now(),
-        startTime: firstTransaction?.executedAt ?? saved.savedAt,
-        theme,
-        hideAmounts,
-      });
-    }
-    const data = portfolio.data;
-    if (!data) throw new Error("The portfolio changed.");
-    return container.shares.createPortfolioSnapshot({
-      id,
-      ledger: data.ledger,
-      history: data.history,
-      createdAt: container.clock.now(),
-      startTime: data.history[0]?.time ?? container.clock.now(),
-      theme,
-      hideAmounts,
+    if (!snapshot) throw new Error("The share preview is not ready.");
+    return container.shares.saveSnapshot({
+      ...snapshot,
+      id: createId("share"),
     });
   }
 
@@ -274,7 +235,8 @@ export function ShareScreen() {
   }
 
   async function copyCaption() {
-    await Clipboard.setStringAsync(makeCaption(currentSnapshot));
+    if (!snapshot) return;
+    await Clipboard.setStringAsync(makeCaption(snapshot));
     setMessage("Caption copied.");
   }
 
@@ -298,11 +260,36 @@ export function ShareScreen() {
             styles.previewFrame,
             {
               backgroundColor: shareThemeColors(theme).background,
-              aspectRatio: size.width / size.height,
+              aspectRatio: designSize.width / designSize.height,
             },
           ]}
         >
-          <ShareCard snapshot={currentSnapshot} theme={theme} sampleJourney={settings.sampleJourney} />
+          <View
+            onLayout={(event) =>
+              setPreviewFrameWidth(event.nativeEvent.layout.width)
+            }
+            style={[
+              styles.previewCard,
+              {
+                width: designSize.width,
+                height: designSize.height,
+                transform: [
+                  {
+                    scale: previewFrameWidth
+                      ? previewFrameWidth / designSize.width
+                      : 1,
+                  },
+                ],
+              },
+            ]}
+          >
+            <ShareCard
+              snapshot={snapshot}
+              theme={theme}
+              sampleJourney={settings.sampleJourney}
+              layout={layout as ShareCardLayout}
+            />
+          </View>
         </View>
         <AppText variant="small" color={palette.textSecondary}>
           Preview matches the exported {SIZES[layout].label.toLowerCase()} PNG.
@@ -371,10 +358,15 @@ export function ShareScreen() {
         pointerEvents="none"
         style={[
           styles.captureTarget,
-          { width: size.width, height: size.height },
+          { width: designSize.width, height: designSize.height },
         ]}
       >
-        <ShareCard snapshot={snapshot} theme={theme} sampleJourney={settings.sampleJourney} />
+        <ShareCard
+          snapshot={snapshot}
+          theme={theme}
+          sampleJourney={settings.sampleJourney}
+          layout={layout as ShareCardLayout}
+        />
       </View>
     </Page>
   );
@@ -395,6 +387,7 @@ const styles = StyleSheet.create({
   },
   previewPanel: { gap: 10 },
   previewFrame: { width: "100%", overflow: "hidden", borderRadius: 20 },
+  previewCard: { alignSelf: "center" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   action: { flexGrow: 1, flexBasis: "30%" },
