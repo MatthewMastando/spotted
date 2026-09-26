@@ -27,9 +27,10 @@ import {
   Chip,
   InlineNotice,
   Page,
-  Panel,
+  Section,
+  Segmented,
   ScreenHeader,
-  SectionTitle,
+  SwitchRow,
 } from "@/components/ui";
 import {
   SHARE_CARD_DESIGN_SIZES,
@@ -182,12 +183,11 @@ export function ShareScreen() {
           backLabel="Close share composer"
           onBack={() => router.back()}
         />
-        <Panel>
-          <AppText variant="title">This result is not ready to share.</AppText>
+        <Section title="This result is not ready to share.">
           <AppText variant="body" color={palette.textSecondary}>
             Save an idea or create a paper position before opening its result card.
           </AppText>
-        </Panel>
+        </Section>
       </Page>
     );
   }
@@ -269,13 +269,48 @@ export function ShareScreen() {
   }
 
   return (
-    <Page contentStyle={styles.page}>
+    <Page
+      contentStyle={styles.page}
+      footer={
+        <View style={styles.footerActions}>
+          {message ? <InlineNotice>{message}</InlineNotice> : null}
+          <ActionButton
+            loading={pending}
+            accessibilityLabel="Share result"
+            accessibilityHint="Open the native share sheet for the exported PNG"
+            onPress={() => void exportCard("share")}
+            style={styles.shareAction}
+          >
+            Share
+          </ActionButton>
+          <View style={styles.secondaryActions}>
+            <ActionButton
+              variant="secondary"
+              loading={pending}
+              accessibilityLabel="Save image"
+              onPress={() => void exportCard("save")}
+              style={styles.secondaryAction}
+            >
+              Save image
+            </ActionButton>
+            <ActionButton
+              variant="quiet"
+              accessibilityLabel="Copy share caption"
+              onPress={() => void copyCaption()}
+              style={styles.secondaryAction}
+            >
+              Copy caption
+            </ActionButton>
+          </View>
+        </View>
+      }
+    >
       <ScreenHeader
         title="Share result"
         backLabel="Close share composer"
         onBack={() => router.back()}
       />
-      <Panel style={styles.previewPanel}>
+      <View style={styles.previewBlock}>
         <View
           style={[
             styles.previewFrame,
@@ -319,64 +354,38 @@ export function ShareScreen() {
         <AppText variant="small" color={palette.textSecondary}>
           Preview matches the exported {SIZES[layout].label.toLowerCase()} PNG.
         </AppText>
-      </Panel>
-      <SectionTitle title="Format" />
-      <View style={styles.chips}>
-        {Object.entries(SIZES).map(([value, option]) => (
-          <Chip
-            key={value}
-            label={option.label}
-            selected={layout === value}
-            onPress={() => setLayout(value as Layout)}
-          />
-        ))}
       </View>
-      <SectionTitle title="Theme" />
-      <View style={styles.chips}>
-        {(["lime", "violet", "sunset"] as ShareTheme[]).map((value) => (
-          <Chip
-            key={value}
-            label={value[0].toUpperCase() + value.slice(1)}
-            selected={theme === value}
-            onPress={() => setTheme(value)}
-          />
-        ))}
-      </View>
-      <Chip
-        label={hideAmounts ? "Amounts hidden" : "Hide dollar amounts"}
-        selected={hideAmounts}
-        onPress={() => setHideAmounts((current) => !current)}
+      <Section title="Format">
+        <Segmented
+          accessibilityLabel="Share card format"
+          value={layout}
+          onChange={setLayout}
+          options={Object.entries(SIZES).map(([value, option]) => ({
+            value: value as Layout,
+            label: option.label,
+            accessibilityLabel: option.label,
+          }))}
+        />
+      </Section>
+      <Section title="Theme">
+        <View style={styles.chips}>
+          {(["lime", "violet", "sunset"] as ShareTheme[]).map((value) => (
+            <Chip
+              key={value}
+              label={value[0].toUpperCase() + value.slice(1)}
+              selected={theme === value}
+              onPress={() => setTheme(value)}
+            />
+          ))}
+        </View>
+      </Section>
+      <SwitchRow
+        label="Hide dollar amounts"
+        accessibilityLabel={hideAmounts ? "Amounts hidden" : "Hide dollar amounts"}
+        value={hideAmounts}
+        onValueChange={setHideAmounts}
         accessibilityHint="Keep the return basis and percentages visible while hiding dollar values"
       />
-      <View style={styles.actions}>
-        <ActionButton
-          loading={pending}
-          accessibilityLabel="Share result"
-          accessibilityHint="Open the native share sheet for the exported PNG"
-          onPress={() => void exportCard("share")}
-          style={styles.action}
-        >
-          Share
-        </ActionButton>
-        <ActionButton
-          variant="secondary"
-          loading={pending}
-          accessibilityLabel="Save image"
-          onPress={() => void exportCard("save")}
-          style={styles.action}
-        >
-          Save image
-        </ActionButton>
-        <ActionButton
-          variant="quiet"
-          accessibilityLabel="Copy share caption"
-          onPress={() => void copyCaption()}
-          style={styles.action}
-        >
-          Copy caption
-        </ActionButton>
-      </View>
-      {message ? <InlineNotice>{message}</InlineNotice> : null}
       <View
         ref={captureTarget}
         collapsable={false}
@@ -404,8 +413,8 @@ function makeCaption(snapshot: ShareSnapshot): string {
 }
 
 const styles = StyleSheet.create({
-  page: { paddingBottom: 130 },
-  previewPanel: { gap: 10 },
+  page: { gap: 24 },
+  previewBlock: { alignItems: "center", gap: 10 },
   previewFrame: {
     width: "100%",
     alignItems: "center",
@@ -415,8 +424,10 @@ const styles = StyleSheet.create({
   previewCardFrame: { position: "relative", overflow: "hidden" },
   previewCard: { position: "absolute", top: 0, left: 0 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  action: { flexGrow: 1, flexBasis: "30%" },
+  footerActions: { gap: 8 },
+  shareAction: { minHeight: 48 },
+  secondaryActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  secondaryAction: { flex: 1, minHeight: 44 },
   captureTarget: {
     position: "absolute",
     left: -2000,

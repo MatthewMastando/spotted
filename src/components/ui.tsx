@@ -414,6 +414,7 @@ export function IconButton({
   disabled,
   testID,
   variant = "filled",
+  stopPropagation = false,
 }: {
   icon: ComponentProps<typeof MaterialCommunityIcons>["name"];
   accessibilityLabel: string;
@@ -422,6 +423,7 @@ export function IconButton({
   disabled?: boolean;
   testID?: string;
   variant?: "filled" | "plain";
+  stopPropagation?: boolean;
 }) {
   const palette = usePalette();
   return (
@@ -432,7 +434,10 @@ export function IconButton({
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: Boolean(disabled) }}
       disabled={disabled}
-      onPress={onPress}
+      onPress={(event) => {
+        if (stopPropagation) event.stopPropagation();
+        onPress();
+      }}
       hitSlop={4}
       style={({ pressed }) => [
         styles.iconButton,
@@ -556,6 +561,7 @@ export function Segmented<T extends string>({
     value: T;
     label: string;
     accessibilityLabel?: string;
+    accessibilityHint?: string;
     disabled?: boolean;
   }[];
   value: T;
@@ -576,6 +582,7 @@ export function Segmented<T extends string>({
             key={option.value}
             accessibilityRole="tab"
             accessibilityLabel={option.accessibilityLabel ?? option.label}
+            accessibilityHint={option.accessibilityHint}
             accessibilityState={{ selected, disabled: Boolean(option.disabled) }}
             disabled={option.disabled}
             onPress={() => onChange(option.value)}
@@ -610,9 +617,11 @@ export function ListRow({
   first = false,
   destructive = false,
   chevron = false,
+  disabled = false,
+  testID,
 }: {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   leading?: ReactNode;
   trailing?: ReactNode;
   onPress?: () => void;
@@ -621,6 +630,8 @@ export function ListRow({
   first?: boolean;
   destructive?: boolean;
   chevron?: boolean;
+  disabled?: boolean;
+  testID?: string;
 }) {
   const palette = usePalette();
   const content = (
@@ -633,11 +644,13 @@ export function ListRow({
         >
           {title}
         </AppText>
-        {subtitle ? (
+        {typeof subtitle === "string" ? (
           <AppText variant="small" color={palette.textSecondary}>
             {subtitle}
           </AppText>
-        ) : null}
+        ) : (
+          subtitle
+        )}
       </View>
       {trailing}
       {chevron ? (
@@ -662,6 +675,7 @@ export function ListRow({
       <View
         accessible={Boolean(accessibilityLabel)}
         accessibilityLabel={accessibilityLabel}
+        testID={testID}
         style={rowStyle}
       >
         {content}
@@ -670,11 +684,17 @@ export function ListRow({
   }
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [rowStyle, { opacity: pressed ? 0.6 : 1 }]}
+      style={({ pressed }) => [
+        rowStyle,
+        { opacity: disabled ? 0.4 : pressed ? 0.6 : 1 },
+      ]}
     >
       {content}
     </Pressable>
@@ -704,12 +724,16 @@ export function SwitchRow({
   value,
   onValueChange,
   first = false,
+  accessibilityLabel,
+  accessibilityHint,
 }: {
   label: string;
   description?: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
   first?: boolean;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }) {
   const palette = usePalette();
   return (
@@ -719,7 +743,8 @@ export function SwitchRow({
       subtitle={description}
       trailing={
         <Switch
-          accessibilityLabel={label}
+          accessibilityLabel={accessibilityLabel ?? label}
+          accessibilityHint={accessibilityHint}
           value={value}
           onValueChange={onValueChange}
           trackColor={{ true: palette.accent, false: palette.surfaceMuted }}

@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-import { MAX_DEMO_DAY } from "@/domain/time";
-import { formatDemoDay } from "@/domain/format";
+import { dateForDay, MAX_DEMO_DAY } from "@/domain/time";
+import { formatDate, formatDemoDay } from "@/domain/format";
 import { usePalette } from "@/design/theme";
 import {
   ActionButton,
   AppText,
-  Chip,
   InlineNotice,
+  ListGroup,
+  ListRow,
   Page,
-  Panel,
+  Section,
+  Segmented,
   ScreenHeader,
-  SectionTitle,
+  SwitchRow,
 } from "@/components/ui";
 import { useContainer } from "@/services/ContainerContext";
 import { createId } from "@/services/ids";
@@ -112,105 +114,114 @@ export function SettingsScreen() {
         subtitle="Tune the demo, then jump back into discovery."
         onBack={() => router.back()}
       />
-      <Panel style={styles.panel}>
-        <SectionTitle title="Appearance" />
+      <Section title="Appearance">
         <AppText variant="small" color={palette.textSecondary}>
           Dark is the default. System follows your device preference.
         </AppText>
-        <View style={styles.chips}>
-          {(["dark", "light", "system"] as const).map((value) => (
-            <Chip
-              key={value}
-              label={value[0].toUpperCase() + value.slice(1)}
-              selected={current.themePref === value}
-              onPress={() => void changeSettings({ themePref: value })}
-            />
-          ))}
-        </View>
-        <View style={styles.chips}>
-          <Chip
+        <Segmented
+          accessibilityLabel="Appearance theme"
+          value={current.themePref}
+          onChange={(value) => void changeSettings({ themePref: value })}
+          options={(["dark", "light", "system"] as const).map((value) => ({
+            value,
+            label: value[0].toUpperCase() + value.slice(1),
+            accessibilityLabel: value[0].toUpperCase() + value.slice(1),
+          }))}
+        />
+        <ListGroup>
+          <SwitchRow
+            first
             label={current.haptics ? "Haptics on" : "Haptics off"}
-            selected={current.haptics}
-            onPress={() => void changeSettings({ haptics: !current.haptics })}
+            accessibilityLabel={current.haptics ? "Haptics on" : "Haptics off"}
+            value={current.haptics}
+            onValueChange={(haptics) => void changeSettings({ haptics })}
           />
-          <Chip
+          <SwitchRow
             label="Always reduce motion"
-            selected={current.reduceMotion === "always"}
-            onPress={() =>
+            value={current.reduceMotion === "always"}
+            onValueChange={(enabled) =>
               void changeSettings({
-                reduceMotion: current.reduceMotion === "always" ? "system" : "always",
+                reduceMotion: enabled ? "always" : "system",
               })
             }
           />
-        </View>
-      </Panel>
-      <Panel style={styles.panel}>
-        <SectionTitle title="Learn how it works" />
-        <ActionButton
-          variant="secondary"
-          accessibilityLabel="Open methodology"
-          onPress={() => router.push("/settings/methodology")}
-        >
-          Methodology
-        </ActionButton>
-        <ActionButton
-          variant="secondary"
-          accessibilityLabel="Open simulation information"
-          onPress={() => setMessage("Everything here is local, synthetic demo data. No orders, accounts, or live quotes are connected.")}
-        >
-          Simulation info
-        </ActionButton>
-      </Panel>
-      <Panel style={styles.panel}>
-        <SectionTitle title="Demo controls" />
-        <AppText variant="body">{formatDemoDay(current.clock.dayOffset)}</AppText>
-        <ActionButton
-          variant="secondary"
-          accessibilityLabel="Open demo clock controls"
-          onPress={() => router.push("/settings/demo")}
-        >
-          Open demo clock
-        </ActionButton>
-      </Panel>
-      <Panel style={styles.panel}>
-        <SectionTitle title="Scenarios" />
+        </ListGroup>
+      </Section>
+      <Section title="Learn how it works">
+        <ListGroup>
+          <ListRow
+            first
+            title="Methodology"
+            accessibilityLabel="Open methodology"
+            onPress={() => router.push("/settings/methodology")}
+            chevron
+          />
+          <ListRow
+            title="Simulation info"
+            accessibilityLabel="Open simulation information"
+            onPress={() =>
+              setMessage(
+                "Everything here is local, synthetic demo data. No orders, accounts, or live quotes are connected.",
+              )
+            }
+            chevron
+          />
+        </ListGroup>
+      </Section>
+      <Section title="Demo controls">
+        <ListGroup>
+          <ListRow
+            first
+            title="Demo clock"
+            subtitle={formatDemoDay(current.clock.dayOffset)}
+            accessibilityLabel="Open demo clock controls"
+            onPress={() => router.push("/settings/demo")}
+            chevron
+          />
+        </ListGroup>
+      </Section>
+      <Section title="Scenarios">
         <AppText variant="small" color={palette.textSecondary}>
           Scenarios use the real local services, so every result can be explored and shared.
         </AppText>
-        {SCENARIOS.map((scenario) => (
-          <View key={scenario.id} style={styles.scenarioRow}>
-            <View style={styles.scenarioCopy}>
-              <AppText variant="label">{scenario.title}</AppText>
-              <AppText variant="small" color={palette.textSecondary}>
-                {scenario.detail}
-              </AppText>
-            </View>
-            <ActionButton
-              variant="quiet"
-              loading={pending}
-              accessibilityLabel={`Run ${scenario.title} scenario`}
-              onPress={() => void selectScenario(scenario)}
-              style={styles.runButton}
-            >
-              Run
-            </ActionButton>
-          </View>
-        ))}
-      </Panel>
-      <Panel style={styles.panel}>
-        <SectionTitle title="Reset app data" />
+        <ListGroup>
+          {SCENARIOS.map((scenario, index) => (
+            <ListRow
+              key={scenario.id}
+              first={index === 0}
+              title={scenario.title}
+              subtitle={scenario.detail}
+              trailing={
+                <ActionButton
+                  variant="quiet"
+                  loading={pending}
+                  accessibilityLabel={`Run ${scenario.title} scenario`}
+                  onPress={() => void selectScenario(scenario)}
+                  style={styles.runButton}
+                >
+                  Run
+                </ActionButton>
+              }
+            />
+          ))}
+        </ListGroup>
+      </Section>
+      <Section title="Reset app data">
         <AppText variant="small" color={palette.textSecondary}>
           Remove saved ideas, paper transactions, and analytics. Choose whether the
           next synthetic market uses the standard or a new deterministic seed.
         </AppText>
         {!resetOpen ? (
-          <ActionButton
-            variant="danger"
-            accessibilityLabel="Choose reset app data options"
-            onPress={() => setResetOpen(true)}
-          >
-            Reset app data
-          </ActionButton>
+          <ListGroup>
+            <ListRow
+              first
+              title="Reset app data"
+              destructive
+              accessibilityLabel="Choose reset app data options"
+              onPress={() => setResetOpen(true)}
+              chevron
+            />
+          </ListGroup>
         ) : (
           <View style={styles.resetChoices}>
             <AppText variant="label">Choose a reset seed</AppText>
@@ -228,12 +239,15 @@ export function SettingsScreen() {
             >
               New market history
             </ActionButton>
-            <ActionButton variant="quiet" onPress={() => setResetOpen(false)}>
+            <ActionButton
+              variant="quiet"
+              onPress={() => setResetOpen(false)}
+            >
               Keep my data
             </ActionButton>
           </View>
         )}
-      </Panel>
+      </Section>
       {message ? <InlineNotice>{message}</InlineNotice> : null}
     </Page>
   );
@@ -249,8 +263,7 @@ export function MethodologyScreen() {
         subtitle="A plain-language guide to the demo scorecard."
         onBack={() => router.back()}
       />
-      <Panel style={styles.panel}>
-        <SectionTitle title="Two deliberate baselines" />
+      <Section title="Two deliberate baselines">
         <AppText variant="body" color={palette.textSecondary}>
           Since-save return compares the current mock price with the exact quote
           captured when you saved an idea. Paper P&L compares simulated holdings
@@ -261,23 +274,21 @@ export function MethodologyScreen() {
           fill; a closed-market quote is labeled last close. Stale and unavailable
           quotes block new fills.
         </AppText>
-      </Panel>
-      <Panel style={styles.panel}>
-        <SectionTitle title="What is excluded" />
+      </Section>
+      <Section title="What is excluded">
         <AppText variant="body" color={palette.textSecondary}>
           Demo results exclude fees, taxes, dividends, interest, and slippage.
           Quantities retain full precision internally; rounding is display-only.
           Social attention is not sentiment, and a high-attention idea is not a buy score.
         </AppText>
-      </Panel>
-      <Panel style={styles.panel}>
-        <SectionTitle title="Synthetic by design" />
+      </Section>
+      <Section title="Synthetic by design">
         <AppText variant="body" color={palette.textSecondary}>
           Prices, history, social activity, and discussion themes are fictional,
           deterministic fixtures. This is an educational paper-investing playground,
           not investment advice or a brokerage.
         </AppText>
-      </Panel>
+      </Section>
     </Page>
   );
 }
@@ -291,13 +302,11 @@ export function SimulationInfoScreen() {
         subtitle="Local-only paper investing."
         onBack={() => router.back()}
       />
-      <Panel style={styles.panel}>
-        <AppText variant="body">
-          Swipefolio runs against a bundled set of synthetic assets. The demo clock,
-          seed, saved prices, paper fills, and exported cards live on this device.
-          No real money, brokerage credentials, or live market data are used.
-        </AppText>
-      </Panel>
+      <AppText variant="body">
+        Swipefolio runs against a bundled set of synthetic assets. The demo clock,
+        seed, saved prices, paper fills, and exported cards live on this device.
+        No real money, brokerage credentials, or live market data are used.
+      </AppText>
     </Page>
   );
 }
@@ -341,6 +350,31 @@ export function DemoControlsScreen() {
     }
   }
 
+  async function selectScenario(scenario: (typeof SCENARIOS)[number]) {
+    if (pending) return;
+    setPending(true);
+    setMessage(null);
+    try {
+      await runMutation(container, () =>
+        runScenario(container, scenario.id, {
+          sampleJourney: scenario.id === "mixedPortfolio",
+        }),
+      );
+      await trackEvent(container, "scenario_started", {
+        scenario_id: scenario.id,
+      });
+      router.replace(scenario.route);
+    } catch (reason) {
+      setMessage(
+        reason instanceof Error ? reason.message : "Unable to run this scenario.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const day = settings.clock.dayOffset;
+
   return (
     <Page>
       <ScreenHeader
@@ -348,55 +382,65 @@ export function DemoControlsScreen() {
         subtitle="Advance synthetic market time without using device time."
         onBack={() => router.back()}
       />
-      <Panel style={styles.panel}>
-        <AppText variant="display">{formatDemoDay(settings.clock.dayOffset)}</AppText>
+      <Section title="Current date">
+        <AppText variant="display">Day {day}</AppText>
+        <AppText variant="caption" color={palette.textSecondary}>
+          {formatDate(dateForDay(day))}
+        </AppText>
         <View style={styles.clockActions}>
           <ActionButton
             variant="secondary"
-            disabled={pending || settings.clock.dayOffset >= MAX_DEMO_DAY}
+            disabled={pending || day >= MAX_DEMO_DAY}
             onPress={() => void advance(1)}
           >
             Advance 1 day
           </ActionButton>
           <ActionButton
             variant="secondary"
-            disabled={pending || settings.clock.dayOffset > MAX_DEMO_DAY - 7}
+            disabled={pending || day > MAX_DEMO_DAY - 7}
             onPress={() => void advance(7)}
           >
             Advance 1 week
           </ActionButton>
         </View>
-        {settings.clock.dayOffset >= MAX_DEMO_DAY ? (
+        {day >= MAX_DEMO_DAY ? (
           <AppText variant="small" color={palette.textSecondary}>
             The demo clock is at its 120-day cap. Reset or restart a scenario to rewind.
           </AppText>
         ) : null}
-        <ActionButton
-          variant="quiet"
-          loading={pending}
-          accessibilityLabel="Restart current scenario"
-          onPress={() => void restart()}
-        >
-          Restart current scenario
-        </ActionButton>
-      </Panel>
+      </Section>
+      <Section title="Current scenario">
+        <ListGroup>
+          <ListRow
+            first
+            title="Restart current scenario"
+            accessibilityLabel="Restart current scenario"
+            onPress={() => void restart()}
+            disabled={pending}
+          />
+        </ListGroup>
+      </Section>
+      <Section title="Scenarios">
+        <ListGroup>
+          {SCENARIOS.map((scenario, index) => (
+            <ListRow
+              key={scenario.id}
+              first={index === 0}
+              title={scenario.title}
+              subtitle={scenario.detail}
+              accessibilityLabel={`Run ${scenario.title} scenario`}
+              onPress={() => void selectScenario(scenario)}
+              disabled={pending}
+            />
+          ))}
+        </ListGroup>
+      </Section>
       {message ? <InlineNotice>{message}</InlineNotice> : null}
     </Page>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { gap: 13 },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  scenarioRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(255,255,255,0.13)",
-    paddingTop: 10,
-  },
-  scenarioCopy: { flex: 1, gap: 3 },
   runButton: { minHeight: 44, paddingHorizontal: 14 },
   resetChoices: { gap: 10 },
   clockActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

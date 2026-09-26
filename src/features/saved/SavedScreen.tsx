@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { AssetFixture, SavedIdea } from "@/domain/types";
@@ -7,16 +14,20 @@ import { formatDate, formatMoney, formatPercent, formatPrice } from "@/domain/fo
 import { returnSinceSave } from "@/domain/returns";
 import { socialAttention } from "@/domain/social";
 import { usePalette } from "@/design/theme";
+import { useReducedMotion } from "@/state/accessibility";
 import {
   ActionButton,
   AppText,
   Chip,
+  IconButton,
   InlineNotice,
+  ListGroup,
+  ListRow,
   Page,
-  Panel,
+  Segmented,
   ScreenHeader,
 } from "@/components/ui";
-import { THEME_LABELS, TYPE_LABELS } from "@/features/common/labels";
+import { TYPE_LABELS } from "@/features/common/labels";
 import { useContainer } from "@/services/ContainerContext";
 import { createId } from "@/services/ids";
 import { trackEvent } from "@/services/track";
@@ -66,11 +77,14 @@ export function SavedScreen() {
   const router = useRouter();
   const palette = usePalette();
   const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
   const settings = useSettings() ?? container.getSettings();
   const [state, setState] = useState<"active" | "archived">("active");
   const [sort, setSort] = useState<SortMode>("newest");
   const [typeFilter, setTypeFilter] = useState<AssetFixture["type"] | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
+  const [sortOpen, setSortOpen] = useState(false);
+  const [menuRow, setMenuRow] = useState<SavedRow | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const saved = useSavedIdeas(state);
   const portfolio = usePortfolioData();
@@ -165,375 +179,434 @@ export function SavedScreen() {
     });
   }
 
+  const sortLabel = SORTS.find((item) => item.value === sort)?.label ?? "Newest";
+
   return (
-    <Page
-      contentStyle={[
-        styles.pageContent,
-        { paddingBottom: insets.bottom + 24 },
-      ]}
-    >
-      <ScreenHeader
-        title="Saved"
-      />
-      {settings.sampleJourney ? (
-        <InlineNotice>
-          <AppText variant="small" color={palette.accent}>
+    <>
+      <Page
+        contentStyle={styles.pageContent}
+        footer={
+          state === "active" && selected.length ? (
+            <View style={styles.selectionFooter}>
+              <AppText variant="small" color={palette.textSecondary}>
+                {selected.length} idea{selected.length === 1 ? "" : "s"} selected
+              </AppText>
+              <ActionButton
+                accessibilityLabel="Allocate selected ideas"
+                accessibilityHint="Choose paper amounts for the selected ideas"
+                onPress={() => allocate(selected)}
+                style={styles.selectionAction}
+              >
+                Allocate selected
+              </ActionButton>
+            </View>
+          ) : undefined
+        }
+      >
+        <ScreenHeader title="Saved" />
+        {settings.sampleJourney ? (
+          <AppText variant="caption" color={palette.textSecondary}>
             Sample journey — not your track record
           </AppText>
-        </InlineNotice>
-      ) : null}
-      <View
-        accessibilityRole="tablist"
-        accessibilityLabel="Saved idea status"
-        style={[styles.segmented, { backgroundColor: palette.surfaceRaised }]}
-      >
-        {(["active", "archived"] as const).map((value) => (
-          <Pressable
-            key={value}
-            accessibilityRole="tab"
-            accessibilityLabel={value === "active" ? "Active" : "Archived"}
-            accessibilityState={{ selected: state === value }}
-            accessibilityHint={
-              value === "active"
-                ? "Show saved ideas you are currently tracking"
-                : "Show saved ideas you archived"
-            }
-            onPress={() => {
-              setState(value);
-              setSelected([]);
-            }}
-            style={[
-              styles.segmentButton,
-              state === value && { backgroundColor: palette.accent },
-            ]}
-          >
-            <AppText
-              variant="label"
-              color={state === value ? palette.background : palette.text}
-            >
-              {value === "active" ? "Active" : "Archived"}
-            </AppText>
-          </Pressable>
-        ))}
-      </View>
-      <View style={styles.filterRow}>
-        <AppText variant="small" color={palette.textMuted}>
-          Sort
-        </AppText>
+        ) : null}
+        <Segmented
+          accessibilityLabel="Saved idea status"
+          value={state}
+          onChange={(value) => {
+            setState(value);
+            setSelected([]);
+          }}
+          options={[
+            {
+              value: "active",
+              label: "Active",
+              accessibilityLabel: "Active",
+              accessibilityHint: "Show saved ideas you are currently tracking",
+            },
+            {
+              value: "archived",
+              label: "Archived",
+              accessibilityLabel: "Archived",
+              accessibilityHint: "Show saved ideas you archived",
+            },
+          ]}
+        />
+        <View style={styles.sortRow}>
+          <Chip
+            label={`Sort: ${sortLabel}`}
+            accessibilityLabel={`Sort by ${sortLabel}`}
+            accessibilityHint="Choose how saved ideas are sorted"
+            onPress={() => setSortOpen(true)}
+          />
+        </View>
         <ScrollView
           horizontal
           style={styles.chipScroll}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chipRow}
         >
-          {SORTS.map((item) => (
+          {TYPES.map((item) => (
             <Chip
-              key={item.value}
+              key={item.label}
               label={item.label}
-              accessibilityLabel={`Sort by ${item.label}`}
-              selected={sort === item.value}
-              accessibilityHint={`Sort saved ideas by ${item.label.toLowerCase()}`}
-              onPress={() => setSort(item.value)}
+              selected={typeFilter === item.value}
+              accessibilityHint={`Filter saved ideas by ${item.label.toLowerCase()}`}
+              onPress={() => setTypeFilter(item.value)}
             />
           ))}
         </ScrollView>
-      </View>
-      <ScrollView
-        horizontal
-        style={styles.chipScroll}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipRow}
-      >
-        {TYPES.map((item) => (
-          <Chip
-            key={item.label}
-            label={item.label}
-            selected={typeFilter === item.value}
-            accessibilityHint={`Filter saved ideas by ${item.label.toLowerCase()}`}
-            onPress={() => setTypeFilter(item.value)}
-          />
-        ))}
-      </ScrollView>
 
-      {state === "active" && selected.length ? (
-        <Panel style={styles.multiSelectBar}>
-          <AppText variant="small">
-            {selected.length} idea{selected.length === 1 ? "" : "s"} selected
-          </AppText>
-          <ActionButton
-            accessibilityLabel="Allocate selected ideas"
-            accessibilityHint="Choose paper amounts for the selected ideas"
-            onPress={() => allocate(selected)}
-          >
-            Allocate selected
-          </ActionButton>
-        </Panel>
-      ) : null}
-
-      {saved.loading && !saved.data ? (
-        <Panel>
-          <AppText variant="body" color={palette.textSecondary}>
+        {saved.loading && !saved.data ? (
+          <AppText variant="small" color={palette.textSecondary}>
             Loading saved ideas…
           </AppText>
-        </Panel>
-      ) : rows.length ? (
-        rows.map((row) => (
-          <SavedRowCard
-            key={row.saved.id}
-            row={row}
-            selected={selected.includes(row.asset.id)}
-            canSelect={state === "active"}
-            pending={pendingId === row.asset.id}
-            onSelect={() => toggleSelected(row.asset.id)}
-            onDetails={() =>
-              router.push({
-                pathname: "/asset/[id]",
-                params: { id: row.asset.id },
-              })
-            }
-            onAllocate={() => allocate([row.asset.id])}
-            onShare={() => share(row)}
-            onArchive={() =>
-              state === "active" ? void archive(row) : void restore(row)
-            }
+        ) : rows.length ? (
+          <ListGroup>
+            {rows.map((row, index) => (
+              <SavedRowCard
+                key={row.saved.id}
+                row={row}
+                first={index === 0}
+                selected={selected.includes(row.asset.id)}
+                canSelect={state === "active"}
+                pending={pendingId === row.asset.id}
+                onSelect={() => toggleSelected(row.asset.id)}
+                onDetails={() =>
+                  router.push({
+                    pathname: "/asset/[id]",
+                    params: { id: row.asset.id },
+                  })
+                }
+                onMenu={() => setMenuRow(row)}
+              />
+            ))}
+          </ListGroup>
+        ) : (
+          <View style={styles.empty}>
+            <AppText variant="title">
+              {state === "active" ? "Nothing saved yet." : "No archived ideas."}
+            </AppText>
+            <AppText variant="body" color={palette.textSecondary}>
+              {state === "active"
+                ? "Swipe right on an idea in Discover to keep its price and watch the result unfold."
+                : "Archived ideas keep their history. Restore one when you want to track it again."}
+            </AppText>
+            {state === "active" ? (
+              <ActionButton
+                accessibilityLabel="Go discover ideas"
+                onPress={() => router.replace("/(tabs)")}
+              >
+                Discover ideas
+              </ActionButton>
+            ) : null}
+          </View>
+        )}
+        {saved.error ? <InlineNotice>{saved.error.message}</InlineNotice> : null}
+      </Page>
+
+      <Modal
+        visible={sortOpen || menuRow !== null}
+        transparent
+        animationType={reducedMotion ? "none" : "slide"}
+        onRequestClose={() => {
+          setSortOpen(false);
+          setMenuRow(null);
+        }}
+      >
+        <View style={styles.sheetScrim}>
+          <Pressable
+            accessible={false}
+            onPress={() => {
+              setSortOpen(false);
+              setMenuRow(null);
+            }}
+            style={StyleSheet.absoluteFill}
           />
-        ))
-      ) : (
-        <Panel style={styles.empty}>
-          <AppText variant="title">
-            {state === "active" ? "Nothing saved yet." : "No archived ideas."}
-          </AppText>
-          <AppText variant="body" color={palette.textSecondary}>
-            {state === "active"
-              ? "Swipe right on an idea in Discover to keep its price and watch the result unfold."
-              : "Archived ideas keep their history. Restore one when you want to track it again."}
-          </AppText>
-          {state === "active" ? (
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: palette.surface,
+                paddingBottom: Math.max(insets.bottom, 16),
+              },
+            ]}
+          >
+            {sortOpen ? (
+              <>
+                <AppText variant="title">Sort saved ideas</AppText>
+                <ListGroup>
+                  {SORTS.map((item, index) => (
+                    <ListRow
+                      key={item.value}
+                      first={index === 0}
+                      title={item.label}
+                      accessibilityLabel={`Sort by ${item.label}`}
+                      accessibilityHint={`Sort saved ideas by ${item.label.toLowerCase()}`}
+                      onPress={() => {
+                        setSort(item.value);
+                        setSortOpen(false);
+                      }}
+                      trailing={
+                        sort === item.value ? (
+                          <MaterialCommunityIcons
+                            name="check"
+                            size={20}
+                            color={palette.text}
+                            accessible={false}
+                          />
+                        ) : null
+                      }
+                    />
+                  ))}
+                </ListGroup>
+              </>
+            ) : menuRow ? (
+              <>
+                <AppText variant="title">
+                  {menuRow.asset.ticker} actions
+                </AppText>
+                <ListGroup>
+                  {!menuRow.funded ? (
+                    <ListRow
+                      first
+                      title={`Allocate ${menuRow.asset.ticker}`}
+                      accessibilityLabel={`Allocate ${menuRow.asset.ticker}`}
+                      onPress={() => {
+                        const row = menuRow;
+                        setMenuRow(null);
+                        allocate([row.asset.id]);
+                      }}
+                      disabled={pendingId === menuRow.asset.id}
+                    />
+                  ) : null}
+                  <ListRow
+                    first={menuRow.funded}
+                    title={`Share ${menuRow.asset.ticker} result`}
+                    accessibilityLabel={`Share ${menuRow.asset.ticker} result`}
+                    onPress={() => {
+                      const row = menuRow;
+                      setMenuRow(null);
+                      share(row);
+                    }}
+                    disabled={
+                      pendingId === menuRow.asset.id ||
+                      (!menuRow.funded && state === "archived")
+                    }
+                  />
+                  <ListRow
+                    first={false}
+                    title={
+                      menuRow.saved.state === "active"
+                        ? `Archive ${menuRow.asset.ticker}`
+                        : `Restore ${menuRow.asset.ticker}`
+                    }
+                    accessibilityLabel={
+                      menuRow.saved.state === "active"
+                        ? `Archive ${menuRow.asset.ticker}`
+                        : `Restore ${menuRow.asset.ticker}`
+                    }
+                    onPress={() => {
+                      const row = menuRow;
+                      setMenuRow(null);
+                      if (state === "active") {
+                        void archive(row);
+                      } else {
+                        void restore(row);
+                      }
+                    }}
+                    disabled={pendingId === menuRow.asset.id}
+                  />
+                </ListGroup>
+              </>
+            ) : null}
             <ActionButton
-              accessibilityLabel="Go discover ideas"
-              onPress={() => router.replace("/(tabs)")}
+              variant="quiet"
+              accessibilityLabel="Close saved idea menu"
+              onPress={() => {
+                setSortOpen(false);
+                setMenuRow(null);
+              }}
             >
-              Discover ideas
+              Done
             </ActionButton>
-          ) : null}
-        </Panel>
-      )}
-      {saved.error ? <InlineNotice>{saved.error.message}</InlineNotice> : null}
-    </Page>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
 function SavedRowCard({
   row,
+  first,
   selected,
   canSelect,
   pending,
   onSelect,
   onDetails,
-  onAllocate,
-  onShare,
-  onArchive,
+  onMenu,
 }: {
   row: SavedRow;
+  first: boolean;
   selected: boolean;
   canSelect: boolean;
   pending: boolean;
   onSelect: () => void;
   onDetails: () => void;
-  onAllocate: () => void;
-  onShare: () => void;
-  onArchive: () => void;
+  onMenu: () => void;
 }) {
   const palette = usePalette();
   const typeLabel = TYPE_LABELS[row.asset.type];
-  const themeLabel = THEME_LABELS[row.asset.themes[0]];
   const returnColor =
     row.returnValue === null
       ? palette.textSecondary
       : row.returnValue.startsWith("-")
         ? palette.negative
         : row.returnValue === "0"
-          ? palette.textSecondary
-          : palette.positive;
+        ? palette.textSecondary
+        : palette.positive;
+  const savedCaption = [
+    `Saved ${formatDate(row.saved.savedAt)} at ${formatPrice(row.saved.savedPrice)}`,
+    row.funded
+      ? `Funded${row.fundedAmount ? ` ${formatMoney(row.fundedAmount)}` : ""}`
+      : "Not funded",
+    row.stale ? "Stale valuation" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <Panel style={styles.rowCard}>
-      <View style={styles.rowHeader}>
-        {canSelect ? (
-          <Pressable
-            accessibilityRole="checkbox"
-            accessibilityLabel={`Select ${row.asset.ticker} for allocation`}
-            accessibilityState={{ checked: selected }}
-            onPress={onSelect}
-            style={styles.checkbox}
-          >
-            <AppText variant="title" color={selected ? palette.accent : palette.textMuted}>
-              {selected ? "☑" : "□"}
-            </AppText>
-          </Pressable>
-        ) : null}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Open ${row.asset.name} details`}
-          testID={`saved-idea-${row.asset.id}`}
-          onPress={onDetails}
-          style={styles.identity}
-        >
+    <ListRow
+      first={first}
+      title={row.asset.name}
+      subtitle={
+        <View style={styles.rowSubtitle}>
+          <AppText variant="small" color={palette.textSecondary}>
+            {row.asset.ticker} · {typeLabel}
+          </AppText>
+          <AppText variant="caption" color={palette.textSecondary}>
+            {savedCaption}
+          </AppText>
+        </View>
+      }
+      leading={
+        <View style={styles.rowLeading}>
+          {canSelect ? (
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityLabel={`Select ${row.asset.ticker} for allocation`}
+              accessibilityState={{ checked: selected }}
+              onPress={(event) => {
+                event.stopPropagation();
+                onSelect();
+              }}
+              hitSlop={4}
+              style={styles.checkbox}
+            >
+              <MaterialCommunityIcons
+                name={selected ? "checkbox-marked" : "checkbox-blank-outline"}
+                size={22}
+                color={selected ? palette.text : palette.textMuted}
+                accessible={false}
+              />
+            </Pressable>
+          ) : null}
           <View style={[styles.icon, { backgroundColor: row.asset.iconColor }]}>
             <AppText variant="label" color="#10130D">
               {row.asset.iconInitials}
             </AppText>
           </View>
-          <View style={styles.identityCopy}>
-            <AppText variant="label">{row.asset.name}</AppText>
-            <AppText variant="small" color={palette.textSecondary}>
-              {row.asset.ticker} · {typeLabel}
-              {themeLabel === typeLabel ? "" : ` · ${themeLabel}`}
+        </View>
+      }
+      trailing={
+        <View style={styles.trailing}>
+          <View style={styles.trailingValues}>
+            <AppText variant="number" numberOfLines={1}>
+              {row.currentPrice ? formatPrice(row.currentPrice) : "Unavailable"}
+            </AppText>
+            <AppText
+              variant="caption"
+              color={returnColor}
+              numberOfLines={1}
+            >
+              {row.returnValue === null
+                ? "Unavailable"
+                : formatPercent(row.returnValue)}
             </AppText>
           </View>
-        </Pressable>
-      </View>
-      <View style={styles.dataGrid}>
-        <SavedData label="Saved" value={`${formatDate(row.saved.savedAt)} · ${formatPrice(row.saved.savedPrice)}`} />
-        <SavedData
-          label="Current"
-          value={row.currentPrice ? formatPrice(row.currentPrice) : "Unavailable"}
-        />
-        <SavedData
-          label="Since save"
-          value={row.returnValue ? formatPercent(row.returnValue) : "Unavailable"}
-          color={returnColor}
-        />
-        <SavedData
-          label="Allocation"
-          value={
-            row.funded
-              ? row.fundedAmount
-                ? `Funded ${formatMoney(row.fundedAmount)}`
-                : "Funded"
-              : "Not funded"
-          }
-          color={row.funded ? palette.accent : palette.textSecondary}
-        />
-      </View>
-      {row.stale ? <Chip label="Stale valuation" /> : null}
-      <View style={styles.actions}>
-        <ActionButton
-          variant="quiet"
-          disabled={pending}
-          accessibilityLabel={`View ${row.asset.ticker} details`}
-          onPress={onDetails}
-          style={styles.smallAction}
-        >
-          Details
-        </ActionButton>
-        {!row.funded ? (
-          <ActionButton
-            variant="secondary"
+          <IconButton
+            icon="dots-horizontal"
+            accessibilityLabel={`More actions for ${row.asset.ticker}`}
             disabled={pending}
-            accessibilityLabel={`Allocate ${row.asset.ticker}`}
-            onPress={onAllocate}
-            style={styles.smallAction}
-          >
-            Allocate
-          </ActionButton>
-        ) : null}
-        <ActionButton
-          variant="quiet"
-          disabled={pending || (!row.funded && row.saved.state === "archived")}
-          accessibilityLabel={`Share ${row.asset.ticker} result`}
-          onPress={onShare}
-          style={styles.smallAction}
-        >
-          Share
-        </ActionButton>
-        <ActionButton
-          variant="quiet"
-          loading={pending}
-          accessibilityLabel={
-            row.saved.state === "active"
-              ? `Archive ${row.asset.ticker}`
-              : `Restore ${row.asset.ticker}`
-          }
-          onPress={onArchive}
-          style={styles.smallAction}
-        >
-          {row.saved.state === "active" ? "Archive" : "Restore"}
-        </ActionButton>
-      </View>
-    </Panel>
-  );
-}
-
-function SavedData({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color?: string;
-}) {
-  const palette = usePalette();
-  return (
-    <View style={styles.savedData}>
-      <AppText variant="label" color={palette.textMuted}>
-        {label}
-      </AppText>
-      <AppText variant="small" color={color ?? palette.text}>
-        {value}
-      </AppText>
-    </View>
+            onPress={onMenu}
+            stopPropagation
+          />
+        </View>
+      }
+      onPress={onDetails}
+      accessibilityLabel={`Open ${row.asset.name} details`}
+      accessibilityHint="Open asset details"
+      testID={`saved-idea-${row.asset.id}`}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  pageContent: { gap: 12, paddingTop: 12 },
-  segmented: {
+  pageContent: { gap: 16, paddingTop: 12 },
+  sortRow: {
     flexDirection: "row",
-    padding: 4,
-    borderRadius: 15,
-  },
-  segmentButton: {
-    flex: 1,
-    minHeight: 40,
-    borderRadius: 12,
     alignItems: "center",
-    justifyContent: "center",
   },
   chipScroll: { flexGrow: 0, flexShrink: 0 },
   filterRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   chipRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  multiSelectBar: {
+  selectionFooter: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     gap: 12,
   },
-  rowCard: { gap: 14 },
-  rowHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  selectionAction: { flex: 1 },
+  rowSubtitle: { gap: 3, flex: 1 },
+  rowLeading: { flexDirection: "row", alignItems: "center", gap: 6 },
   checkbox: {
-    minWidth: 44,
-    minHeight: 44,
+    width: 32,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-  },
-  identity: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
   },
   icon: {
-    width: 42,
-    minHeight: 42,
-    borderRadius: 13,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  identityCopy: { flex: 1, gap: 3 },
-  dataGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  savedData: { flexGrow: 1, flexBasis: "42%", gap: 3 },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: 4 },
-  smallAction: { flexGrow: 1, flexBasis: "22%", minHeight: 44, paddingHorizontal: 9 },
-  empty: { gap: 12 },
+  trailing: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  trailingValues: {
+    minWidth: 66,
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  empty: {
+    flexGrow: 1,
+    justifyContent: "center",
+    gap: 12,
+    paddingVertical: 56,
+  },
+  sheetScrim: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  sheet: {
+    gap: 16,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
 });
