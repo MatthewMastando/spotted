@@ -149,12 +149,17 @@ export function AssetDetailsScreen() {
     setPending(true);
     setMessage(null);
     try {
-      await runMutation(container, () =>
+      const result = await runMutation(container, () =>
         container.savedIdeas.save(selectedAsset.id, createId("details-save")),
       );
       await trackEvent(container, "idea_saved", { asset_id: selectedAsset.id });
       await successHaptic(container);
-      setMessage(`${selectedAsset.ticker} is now tracking from ${formatPrice(currentPrice)}.`);
+      const { savedIdea } = result;
+      setMessage(
+        result.disposition === "restored"
+          ? `${selectedAsset.ticker} is back in Saved, still tracking from ${formatPrice(savedIdea.savedPrice)} since ${formatDate(savedIdea.savedAt)}.`
+          : `${selectedAsset.ticker} is now tracking from ${formatPrice(savedIdea.savedPrice)}.`,
+      );
     } catch (reason) {
       setMessage(
         reason instanceof Error ? reason.message : "Unable to save this idea.",

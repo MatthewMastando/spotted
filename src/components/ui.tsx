@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Pressable,
   PressableProps,
+  PixelRatio,
   ScrollView,
   StyleProp,
   StyleSheet,
@@ -254,10 +255,15 @@ export function Chip({
   style?: StyleProp<ViewStyle>;
 }) {
   const palette = usePalette();
+  const fontScale = PixelRatio.getFontScale();
+  const largeText = fontScale > 1.35;
+  const largeMinWidth = 26 + label.length * 6.5 * fontScale;
   const content = (
     <AppText
       variant="small"
+      numberOfLines={largeText ? 2 : undefined}
       color={selected ? palette.background : palette.textSecondary}
+      style={[styles.chipText, largeText && styles.chipTextLarge]}
     >
       {label}
     </AppText>
@@ -265,7 +271,14 @@ export function Chip({
   const background = selected ? palette.text : palette.surfaceRaised;
   if (!onPress) {
     return (
-      <View style={[styles.chip, { backgroundColor: background }, style]}>
+      <View
+        style={[
+          styles.chip,
+          largeText && { minWidth: largeMinWidth },
+          { backgroundColor: background },
+          style,
+        ]}
+      >
         {content}
       </View>
     );
@@ -280,6 +293,7 @@ export function Chip({
       hitSlop={5}
       style={({ pressed }) => [
         styles.chip,
+        largeText && { minWidth: largeMinWidth },
         { backgroundColor: background, opacity: pressed ? 0.75 : 1 },
         style,
       ]}
@@ -477,6 +491,7 @@ export function ScreenHeader({
   showDemo?: boolean;
 }) {
   const palette = usePalette();
+  const largeText = PixelRatio.getFontScale() > 1.35;
   if (onBack) {
     return (
       <View style={styles.navBar}>
@@ -500,6 +515,30 @@ export function ScreenHeader({
         <View style={[styles.navSide, styles.navRight]}>
           {right ?? (showDemo ? <DemoPill /> : null)}
         </View>
+      </View>
+    );
+  }
+  if (largeText) {
+    return (
+      <View style={styles.tabHeader}>
+        <AppText
+          variant="display"
+          accessibilityRole="header"
+          style={styles.largeTabTitle}
+        >
+          {title}
+        </AppText>
+        <View style={styles.largeTabHeaderRow}>
+          <View style={styles.largeTabHeaderActions}>
+            {showDemo ? <DemoPill /> : null}
+            {right}
+          </View>
+        </View>
+        {subtitle ? (
+          <AppText variant="small" color={palette.textSecondary}>
+            {subtitle}
+          </AppText>
+        ) : null}
       </View>
     );
   }
@@ -597,7 +636,8 @@ export function Segmented<T extends string>({
           >
             <AppText
               variant="label"
-              numberOfLines={1}
+              numberOfLines={2}
+              style={styles.segmentText}
               color={selected ? palette.text : palette.textSecondary}
             >
               {option.label}
@@ -828,6 +868,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chip: {
+    flexShrink: 0,
     minHeight: 34,
     justifyContent: "center",
     alignItems: "center",
@@ -835,6 +876,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
   },
+  chipText: { flexShrink: 0 },
+  chipTextLarge: { flexShrink: 1, textAlign: "center" },
   notice: {
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -886,6 +929,17 @@ const styles = StyleSheet.create({
   tabHeader: { gap: 6, paddingTop: 8 },
   tabHeaderRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   tabTitle: { flex: 1 },
+  largeTabTitle: { width: "100%" },
+  largeTabHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  largeTabHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   stat: { flex: 1, gap: 4 },
   statRight: { alignItems: "flex-end" },
   segmented: {
@@ -901,6 +955,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 8,
   },
+  segmentText: { width: "100%", flexShrink: 1, textAlign: "center" },
   listGroup: { borderRadius: 20, paddingHorizontal: 16 },
   row: {
     minHeight: 56,

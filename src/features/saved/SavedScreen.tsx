@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Modal,
+  PixelRatio,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -76,6 +77,7 @@ export function SavedScreen() {
   const container = useContainer();
   const router = useRouter();
   const palette = usePalette();
+  const largeText = PixelRatio.getFontScale() > 1.35;
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const settings = useSettings() ?? container.getSettings();
@@ -180,6 +182,15 @@ export function SavedScreen() {
   }
 
   const sortLabel = SORTS.find((item) => item.value === sort)?.label ?? "Newest";
+  const typeChips = TYPES.map((item) => (
+    <Chip
+      key={item.label}
+      label={item.label}
+      selected={typeFilter === item.value}
+      accessibilityHint={`Filter saved ideas by ${item.label.toLowerCase()}`}
+      onPress={() => setTypeFilter(item.value)}
+    />
+  ));
 
   return (
     <>
@@ -239,22 +250,18 @@ export function SavedScreen() {
             onPress={() => setSortOpen(true)}
           />
         </View>
-        <ScrollView
-          horizontal
-          style={styles.chipScroll}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-        >
-          {TYPES.map((item) => (
-            <Chip
-              key={item.label}
-              label={item.label}
-              selected={typeFilter === item.value}
-              accessibilityHint={`Filter saved ideas by ${item.label.toLowerCase()}`}
-              onPress={() => setTypeFilter(item.value)}
-            />
-          ))}
-        </ScrollView>
+        {largeText ? (
+          <View style={styles.filterWrap}>{typeChips}</View>
+        ) : (
+          <ScrollView
+            horizontal
+            style={styles.chipScroll}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipRow}
+          >
+            {typeChips}
+          </ScrollView>
+        )}
 
         {saved.loading && !saved.data ? (
           <AppText variant="small" color={palette.textSecondary}>
@@ -456,6 +463,7 @@ function SavedRowCard({
   onMenu: () => void;
 }) {
   const palette = usePalette();
+  const largeText = PixelRatio.getFontScale() > 1.35;
   const typeLabel = TYPE_LABELS[row.asset.type];
   const returnColor =
     row.returnValue === null
@@ -465,52 +473,57 @@ function SavedRowCard({
         : row.returnValue === "0"
         ? palette.textSecondary
         : palette.positive;
-  const savedCaption = [
-    `Saved ${formatPrice(row.saved.savedPrice)} · ${formatDate(row.saved.savedAt)}`,
+  const status = [
     row.funded ? "Funded" : null,
     row.stale ? "Stale valuation" : null,
   ]
     .filter(Boolean)
     .join(" · ");
+  const savedCaption = `Saved ${formatPrice(row.saved.savedPrice)} · ${formatDate(row.saved.savedAt)}`;
+  const priceAndReturn = (
+    <>
+      <AppText variant="number" numberOfLines={1}>
+        {row.currentPrice ? formatPrice(row.currentPrice) : "Unavailable"}
+      </AppText>
+      <AppText variant="caption" color={returnColor} numberOfLines={1}>
+        {row.returnValue === null
+          ? "Unavailable"
+          : formatPercent(row.returnValue)}
+      </AppText>
+    </>
+  );
 
   return (
     <ListRow
       first={first}
       title={row.asset.name}
-      titleNumberOfLines={1}
+      titleNumberOfLines={largeText ? 2 : 1}
       subtitle={
         <View style={styles.rowSubtitle}>
           <AppText
             variant="small"
             color={palette.textSecondary}
-            numberOfLines={1}
+            numberOfLines={largeText ? 2 : 1}
           >
             {row.asset.ticker} · {typeLabel}
+            {status ? ` · ${status}` : ""}
           </AppText>
           <AppText
             variant="caption"
             color={palette.textSecondary}
-            numberOfLines={1}
+            numberOfLines={largeText ? 2 : 1}
           >
             {savedCaption}
           </AppText>
+          {largeText ? (
+            <View style={styles.largeTrailingValues}>{priceAndReturn}</View>
+          ) : null}
         </View>
       }
       titleTrailing={
-        <View style={styles.trailingValues}>
-          <AppText variant="number" numberOfLines={1}>
-            {row.currentPrice ? formatPrice(row.currentPrice) : "Unavailable"}
-          </AppText>
-          <AppText
-            variant="caption"
-            color={returnColor}
-            numberOfLines={1}
-          >
-            {row.returnValue === null
-              ? "Unavailable"
-              : formatPercent(row.returnValue)}
-          </AppText>
-        </View>
+        largeText ? null : (
+          <View style={styles.trailingValues}>{priceAndReturn}</View>
+        )
       }
       leading={
         <View style={styles.rowLeading}>
@@ -568,7 +581,19 @@ const styles = StyleSheet.create({
   },
   chipScroll: { flexGrow: 0, flexShrink: 0 },
   filterRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  chipRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  chipRow: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  filterWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+  },
   selectionFooter: {
     flexDirection: "row",
     alignItems: "center",
@@ -576,6 +601,11 @@ const styles = StyleSheet.create({
   },
   selectionAction: { flex: 1 },
   rowSubtitle: { gap: 3, flex: 1 },
+  largeTrailingValues: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   rowLeading: { flexDirection: "row", alignItems: "center", gap: 6 },
   checkbox: {
     width: 36,

@@ -15,7 +15,7 @@ import type { DeckFilters, DeckMode } from "@/domain/deck";
 import { MIN_HISTORY_DAY } from "@/domain/time";
 import { getFilterKey } from "@/services/deckService";
 import { createId } from "@/services/ids";
-import { formatPrice } from "@/domain/format";
+import { formatDate, formatPrice } from "@/domain/format";
 import { usePalette } from "@/design/theme";
 import {
   ActionButton,
@@ -195,25 +195,33 @@ export function DiscoverScreen() {
         if (direction === "save" && capturedPrice === null) {
           throw new Error("This idea has no available price to track yet.");
         }
-        await runMutation(container, async () => {
+        const actionResult = await runMutation(container, async () => {
           if (direction === "save") {
-            await container.savedIdeas.save(
-              assetId,
-              actionId,
-              getFilterKey(filters),
-            );
-          } else {
-            await container.deck.pass(assetId, actionId, filters);
+            return {
+              direction,
+              saved: await container.savedIdeas.save(
+                assetId,
+                actionId,
+                getFilterKey(filters),
+              ),
+            } as const;
           }
+          await container.deck.pass(assetId, actionId, filters);
+          return { direction } as const;
         });
         setUndoAvailable(true);
         await trackEvent(container, direction === "save" ? "idea_saved" : "idea_passed", {
           asset_id: assetId,
           filter_key: getFilterKey(filters),
         });
-        if (direction === "save") {
+        if (actionResult.direction === "save") {
           await successHaptic(container);
-          setToast(`Price tracked from here · ${formatPrice(capturedPrice)}`);
+          const { savedIdea, disposition } = actionResult.saved;
+          setToast(
+            disposition === "restored"
+              ? `Back in Saved · tracking from ${formatPrice(savedIdea.savedPrice)} since ${formatDate(savedIdea.savedAt)}`
+              : `Price tracked from here · ${formatPrice(savedIdea.savedPrice)}`,
+          );
         } else {
           await lightHaptic(container);
           setToast(`Passed ${container.assets.getDetails(assetId)?.ticker ?? "idea"}.`);
@@ -291,6 +299,31 @@ export function DiscoverScreen() {
     setSearchOpen(false);
   }
 
+  const filterChips = (
+    <>
+      {TYPES.map((filter) => (
+        <Chip
+          key={filter.label}
+          label={filter.label}
+          selected={typeFilter === filter.value}
+          accessibilityHint={`Filter the discovery deck by ${filter.label.toLowerCase()}`}
+          onPress={() => setTypeFilter(filter.value)}
+        />
+      ))}
+      <Chip
+        label={themeFilter ? THEME_LABELS[themeFilter] : "Themes"}
+        accessibilityLabel={
+          themeFilter
+            ? `Theme filter: ${THEME_LABELS[themeFilter]}`
+            : "Choose a theme"
+        }
+        accessibilityHint="Open theme filters"
+        selected={themeFilter !== null}
+        onPress={() => setThemesOpen(true)}
+      />
+    </>
+  );
+
   return (
     <Page
       scrollable={largeText || Boolean(search.trim())}
@@ -366,72 +399,65 @@ export function DiscoverScreen() {
             onChange={setMode}
           />
 
-          <ScrollView
-            horizontal
-            style={styles.chipScroll}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterRow}
-          >
-            {TYPES.map((filter) => (
-              <Chip
-                key={filter.label}
-                label={filter.label}
-                selected={typeFilter === filter.value}
-                accessibilityHint={`Filter the discovery deck by ${filter.label.toLowerCase()}`}
-                onPress={() => setTypeFilter(filter.value)}
-              />
-            ))}
-            <Chip
-              label={themeFilter ? THEME_LABELS[themeFilter] : "Themes"}
-              accessibilityLabel={
-                themeFilter
-                  ? `Theme filter: ${THEME_LABELS[themeFilter]}`
-                  : "Choose a theme"
-              }
-              accessibilityHint="Open theme filters"
-              selected={themeFilter !== null}
-              onPress={() => setThemesOpen(true)}
-            />
-          </ScrollView>
+          {largeText ? (
+            <View style={styles.filterWrap}>{filterChips}</View>
+          ) : (
+            <ScrollView
+              horizontal
+              style={styles.chipScroll}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterRow}
+            >
+              {filterChips}
+            </ScrollView>
+          )}
 
           {activeIdeas.data && activeIdeas.data.length >= 3 && !ctaDismissed ? (
-            <View style={[styles.allocationCta, { backgroundColor: palette.surface }]}>
+            <View
+              style={[
+                styles.allocationCta,
+                largeText && styles.allocationCtaLarge,
+                { backgroundColor: palette.surface },
+              ]}
+            >
               <AppText
                 variant="small"
-                numberOfLines={1}
-                style={styles.ctaText}
+                numberOfLines={largeText ? 2 : 1}
+                style={[styles.ctaText, largeText && styles.ctaTextLarge]}
               >
                 Build my paper portfolio
               </AppText>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Build my paper portfolio"
-                onPress={() =>
-                  router.push({
-                    pathname: "/allocate",
-                    params: {
-                      assetIds: (activeIdeas.data ?? [])
-                        .map((idea) => idea.assetId)
-                        .join(","),
-                    },
-                  })
-                }
-                style={styles.ctaButton}
-              >
-                <AppText variant="small" color={palette.accent}>
-                  Build
-                </AppText>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Not now"
-                onPress={() => setCtaDismissed(true)}
-                style={styles.ctaButton}
-              >
-                <AppText variant="small" color={palette.textSecondary}>
-                  Not now
-                </AppText>
-              </Pressable>
+              <View style={largeText ? styles.ctaActionsLarge : styles.ctaActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Build my paper portfolio"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/allocate",
+                      params: {
+                        assetIds: (activeIdeas.data ?? [])
+                          .map((idea) => idea.assetId)
+                          .join(","),
+                      },
+                    })
+                  }
+                  style={styles.ctaButton}
+                >
+                  <AppText variant="small" color={palette.accent}>
+                    Build
+                  </AppText>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Not now"
+                  onPress={() => setCtaDismissed(true)}
+                  style={styles.ctaButton}
+                >
+                  <AppText variant="small" color={palette.textSecondary}>
+                    Not now
+                  </AppText>
+                </Pressable>
+              </View>
             </View>
           ) : null}
 
@@ -741,7 +767,19 @@ const styles = StyleSheet.create({
   searchField: { flex: 1 },
   clearButton: { minWidth: 48, paddingHorizontal: 8 },
   chipScroll: { flexGrow: 0, flexShrink: 0 },
-  filterRow: { gap: 7, alignItems: "center", paddingVertical: 2 },
+  filterRow: {
+    flexGrow: 0,
+    flexShrink: 0,
+    gap: 7,
+    alignItems: "center",
+    paddingVertical: 2,
+  },
+  filterWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 7,
+  },
   allocationCta: {
     minHeight: 44,
     borderRadius: 14,
@@ -752,6 +790,22 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   ctaText: { flex: 1 },
+  allocationCtaLarge: {
+    minHeight: 0,
+    flexDirection: "column",
+    alignItems: "stretch",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 4,
+  },
+  ctaTextLarge: { flex: 0 },
+  ctaActions: { flexDirection: "row", alignItems: "center", gap: 4 },
+  ctaActionsLarge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 4,
+  },
   ctaButton: {
     minHeight: 36,
     justifyContent: "center",
