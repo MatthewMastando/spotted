@@ -1,0 +1,67 @@
+appId: com.swipefolio.app
+---
+- launchApp
+- tapOn:
+    text: "Close"
+    optional: true
+- openLink: "swipefolio://settings"
+- scrollUntilVisible:
+    element: "Run Fresh account scenario"
+    direction: DOWN
+- tapOn: "Run Fresh account scenario"
+- openLink: "swipefolio://onboarding"
+- scrollUntilVisible:
+    element: "Continue to Discover"
+    direction: DOWN
+- tapOn:
+    text: "Continue to Discover"
+- assertVisible: "Discover"
+- tapOn:
+    id: "discover-save"
+- assertVisible:
+    id: "discover-action-toast"
+- tapOn:
+    id: "discover-save"
+- assertVisible:
+    id: "discover-action-toast"
+- tapOn:
+    id: "discover-save"
+- assertVisible:
+    id: "discover-action-toast"
+- tapOn: "Build my paper portfolio"
+- tapOn: "Split total equally"
+- tapOn: "Review allocation"
+- tapOn: "Confirm paper allocation"
+- assertVisible: "Portfolio"
+- tapOn:
+    id: "tab-discover"
+- openLink: "swipefolio://settings"
+- scrollUntilVisible:
+    element: "Open demo clock controls"
+    direction: DOWN
+- tapOn: "Open demo clock controls"
+- tapOn: "Advance 1 week"
+- tapOn: "Go back"
+- tapOn: "Go back"
+- tapOn:
+    id: "tab-portfolio"
+- assertVisible: "Paper P&L"
+- scrollUntilVisible:
+    element:
+      id: "portfolio-share-position"
+    direction: DOWN
+- tapOn:
+    id: "portfolio-share-position"
+    index: 0
+- assertVisible: "Share result"
+- scrollUntilVisible:
+    element: "Save image"
+    direction: DOWN
+- tapOn: "Save image"
+- tapOn:
+    text: "Allow Full Access"
+    optional: true
+- tapOn:
+    text: "Allow"
+    optional: true
+- assertVisible: "Saved image to your photo library."

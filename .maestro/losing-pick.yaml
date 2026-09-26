@@ -1,0 +1,13 @@
+appId: com.swipefolio.app
+---
+- openLink: "swipefolio://settings"
+- scrollUntilVisible:
+    element: "Run Losing pick scenario"
+    direction: DOWN
+- tapOn: "Run Losing pick scenario"
+- assertVisible: "Portfolio"
+- assertVisible: "Paper P&L"
+- scrollUntilVisible:
+    element: "ADA"
+    direction: DOWN
+- assertVisible: "ADA"

@@ -1,0 +1,15 @@
+appId: com.swipefolio.app
+---
+- openLink: "swipefolio://settings"
+- scrollUntilVisible:
+    element: "Run First three saves scenario"
+    direction: DOWN
+- tapOn: "Run First three saves scenario"
+- assertVisible:
+    id: "saved-idea-cry_eth"
+- stopApp
+- launchApp
+- tapOn:
+    id: "tab-saved"
+- assertVisible:
+    id: "saved-idea-cry_eth"
