@@ -1,4 +1,5 @@
 import { AssetFixture, ThemeId } from "./types";
+import { THEME_LABELS } from "./themeLabels";
 
 export type DeckMode = "for_you" | "trending" | "explore";
 
@@ -129,7 +130,7 @@ function reasonFor(
     input.interests.includes(theme),
   );
   if (matchingTheme)
-    return `Matches your ${matchingTheme.replaceAll("_", " ")} interest`;
+    return `Matches your ${THEME_LABELS[matchingTheme]} interest`;
   if (input.mode === "trending") return "Social mentions accelerating";
   return "Explore a different sector";
 }

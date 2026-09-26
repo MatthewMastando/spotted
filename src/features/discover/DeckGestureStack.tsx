@@ -23,6 +23,7 @@ export function DeckGestureStack({
   current,
   next,
   data,
+  reason,
   locked,
   reducedMotion,
   canSave,
@@ -33,6 +34,7 @@ export function DeckGestureStack({
   current: RankedDeckItem;
   next: RankedDeckItem | null;
   data: AssetCardData;
+  reason: string;
   locked: boolean;
   reducedMotion: boolean;
   canSave: boolean;
@@ -206,6 +208,7 @@ export function DeckGestureStack({
           <AssetCard
             asset={current.asset}
             data={data}
+            reason={reason}
             onDetails={onDetails}
             interactive={!locked}
             accessibilityActions={[
@@ -244,7 +247,7 @@ export function DeckGestureStack({
 }
 
 const styles = StyleSheet.create({
-  stack: { position: "relative", paddingTop: 12 },
+  stack: { position: "relative", flex: 1, paddingTop: 12 },
   peek: {
     position: "absolute",
     top: 0,
@@ -266,7 +269,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   peekCopy: { flex: 1, gap: 3 },
-  front: { position: "relative", zIndex: 1 },
+  front: { position: "relative", zIndex: 1, flex: 1 },
   stamp: {
     position: "absolute",
     top: 26,

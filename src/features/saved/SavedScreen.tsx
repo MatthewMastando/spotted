@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { AssetFixture, SavedIdea } from "@/domain/types";
 import { formatDate, formatMoney, formatPercent, formatPrice } from "@/domain/format";
 import { returnSinceSave } from "@/domain/returns";
@@ -12,8 +13,8 @@ import {
   Chip,
   InlineNotice,
   Page,
-  PageTitle,
   Panel,
+  ScreenHeader,
 } from "@/components/ui";
 import { THEME_LABELS, TYPE_LABELS } from "@/features/common/labels";
 import { useContainer } from "@/services/ContainerContext";
@@ -64,6 +65,7 @@ export function SavedScreen() {
   const container = useContainer();
   const router = useRouter();
   const palette = usePalette();
+  const insets = useSafeAreaInsets();
   const settings = useSettings() ?? container.getSettings();
   const [state, setState] = useState<"active" | "archived">("active");
   const [sort, setSort] = useState<SortMode>("newest");
@@ -164,8 +166,13 @@ export function SavedScreen() {
   }
 
   return (
-    <Page>
-      <PageTitle
+    <Page
+      contentStyle={[
+        styles.pageContent,
+        { paddingBottom: insets.bottom + 24 },
+      ]}
+    >
+      <ScreenHeader
         eyebrow="TRACKED IDEAS"
         title="Saved"
         subtitle="Your discovery prices stay put while the demo market moves."
@@ -177,44 +184,66 @@ export function SavedScreen() {
           </AppText>
         </InlineNotice>
       ) : null}
-      <View style={styles.segmented}>
-        <Chip
-          label="Active"
-          selected={state === "active"}
-          accessibilityHint="Show saved ideas you are currently tracking"
-          onPress={() => {
-            setState("active");
-            setSelected([]);
-          }}
-        />
-        <Chip
-          label="Archived"
-          selected={state === "archived"}
-          accessibilityHint="Show saved ideas you archived"
-          onPress={() => {
-            setState("archived");
-            setSelected([]);
-          }}
-        />
-      </View>
-      <AppText variant="label" color={palette.textSecondary}>
-        SORT
-      </AppText>
-      <View style={styles.chipWrap}>
-        {SORTS.map((item) => (
-          <Chip
-            key={item.value}
-            label={item.label}
-            selected={sort === item.value}
-            accessibilityHint={`Sort saved ideas by ${item.label.toLowerCase()}`}
-            onPress={() => setSort(item.value)}
-          />
+      <View
+        accessibilityRole="tablist"
+        accessibilityLabel="Saved idea status"
+        style={[styles.segmented, { backgroundColor: palette.surfaceRaised }]}
+      >
+        {(["active", "archived"] as const).map((value) => (
+          <Pressable
+            key={value}
+            accessibilityRole="tab"
+            accessibilityLabel={value === "active" ? "Active" : "Archived"}
+            accessibilityState={{ selected: state === value }}
+            accessibilityHint={
+              value === "active"
+                ? "Show saved ideas you are currently tracking"
+                : "Show saved ideas you archived"
+            }
+            onPress={() => {
+              setState(value);
+              setSelected([]);
+            }}
+            style={[
+              styles.segmentButton,
+              state === value && { backgroundColor: palette.accent },
+            ]}
+          >
+            <AppText
+              variant="label"
+              color={state === value ? palette.background : palette.text}
+            >
+              {value === "active" ? "Active" : "Archived"}
+            </AppText>
+          </Pressable>
         ))}
       </View>
-      <AppText variant="label" color={palette.textSecondary}>
-        FILTER BY CLASS
-      </AppText>
-      <View style={styles.chipWrap}>
+      <View style={styles.filterRow}>
+        <AppText variant="small" color={palette.textMuted}>
+          Sort
+        </AppText>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}
+        >
+          {SORTS.map((item) => (
+            <Chip
+              key={item.value}
+              label={item.label}
+              accessibilityLabel={`Sort by ${item.label}`}
+              selected={sort === item.value}
+              accessibilityHint={`Sort saved ideas by ${item.label.toLowerCase()}`}
+              onPress={() => setSort(item.value)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+      >
         {TYPES.map((item) => (
           <Chip
             key={item.label}
@@ -224,7 +253,7 @@ export function SavedScreen() {
             onPress={() => setTypeFilter(item.value)}
           />
         ))}
-      </View>
+      </ScrollView>
 
       {state === "active" && selected.length ? (
         <Panel style={styles.multiSelectBar}>
@@ -343,6 +372,7 @@ function SavedRowCard({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Open ${row.asset.name} details`}
+          testID={`saved-idea-${row.asset.id}`}
           onPress={onDetails}
           style={styles.identity}
         >
@@ -455,8 +485,21 @@ function SavedData({
 }
 
 const styles = StyleSheet.create({
-  segmented: { flexDirection: "row", gap: 8 },
-  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  pageContent: { gap: 12, paddingTop: 12 },
+  segmented: {
+    flexDirection: "row",
+    padding: 4,
+    borderRadius: 15,
+  },
+  segmentButton: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  chipRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   multiSelectBar: {
     flexDirection: "row",
     alignItems: "center",

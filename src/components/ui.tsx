@@ -16,7 +16,9 @@ import {
   ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { formatDemoDay } from "@/domain/format";
 import { usePalette } from "@/design/theme";
+import { useAppStore } from "@/state/appStore";
 
 type TextVariant = "display" | "title" | "body" | "small" | "label" | "number";
 
@@ -66,10 +68,12 @@ export function AppText({
 export function Page({
   children,
   contentStyle,
+  scrollable = true,
   ...props
 }: {
   children: ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
+  scrollable?: boolean;
 } & ViewProps) {
   const palette = usePalette();
   return (
@@ -78,12 +82,16 @@ export function Page({
       style={[styles.page, { backgroundColor: palette.background }]}
       {...props}
     >
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.pageContent, contentStyle]}
-      >
-        {children}
-      </ScrollView>
+      {scrollable ? (
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.pageContent, contentStyle]}
+        >
+          {children}
+        </ScrollView>
+      ) : (
+        <View style={[styles.pageContent, contentStyle]}>{children}</View>
+      )}
     </SafeAreaView>
   );
 }
@@ -174,12 +182,14 @@ export function ActionButton({
 
 export function Chip({
   label,
+  accessibilityLabel,
   selected = false,
   onPress,
   accessibilityHint,
   style,
 }: {
   label: string;
+  accessibilityLabel?: string;
   selected?: boolean;
   onPress?: () => void;
   accessibilityHint?: string;
@@ -202,7 +212,7 @@ export function Chip({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ selected }}
       onPress={onPress}
@@ -219,14 +229,17 @@ export function Chip({
 
 export function InlineNotice({
   children,
+  pointerEvents,
   style,
 }: {
   children: ReactNode;
+  pointerEvents?: ViewProps["pointerEvents"];
   style?: StyleProp<ViewStyle>;
 }) {
   const palette = usePalette();
   return (
     <View
+      pointerEvents={pointerEvents}
       style={[
         styles.notice,
         { backgroundColor: palette.surfaceRaised, borderColor: palette.border },
@@ -314,13 +327,78 @@ export function PageTitle({
   );
 }
 
+export function ScreenHeader({
+  title,
+  eyebrow,
+  subtitle,
+  onBack,
+  right,
+  backLabel = "Go back",
+  showDemo = true,
+}: {
+  title: string;
+  eyebrow?: string;
+  subtitle?: string;
+  onBack?: () => void;
+  right?: ReactNode;
+  backLabel?: string;
+  showDemo?: boolean;
+}) {
+  const palette = usePalette();
+  const day = useAppStore((state) => state.settings?.clock.dayOffset ?? 0);
+  return (
+    <View style={styles.screenHeader}>
+      {onBack ? (
+        <ActionButton
+          variant="quiet"
+          accessibilityLabel={backLabel}
+          accessibilityHint="Return to the previous screen"
+          onPress={onBack}
+          style={styles.screenBack}
+        >
+          ←
+        </ActionButton>
+      ) : null}
+      <View style={styles.screenHeaderCopy}>
+        {eyebrow ? (
+          <AppText variant="label" color={palette.accent}>
+            {eyebrow}
+          </AppText>
+        ) : null}
+        <AppText variant="display">{title}</AppText>
+        {showDemo ? (
+          <View
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={formatDemoDay(day)}
+            style={[
+              styles.demoBadge,
+              { backgroundColor: palette.surfaceRaised, borderColor: palette.border },
+            ]}
+          >
+            <AppText variant="label" color={palette.textSecondary}>
+              {formatDemoDay(day)}
+            </AppText>
+          </View>
+        ) : null}
+        {subtitle ? (
+          <AppText variant="body" color={palette.textSecondary}>
+            {subtitle}
+          </AppText>
+        ) : null}
+      </View>
+      {right ? <View style={styles.screenRight}>{right}</View> : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   page: { flex: 1 },
   pageContent: {
     flexGrow: 1,
     gap: 18,
     paddingHorizontal: 20,
-    paddingTop: 52,
+    paddingTop: 20,
     paddingBottom: 36,
   },
   panel: {
@@ -372,4 +450,19 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   pageTitleCopy: { flex: 1, gap: 6 },
+  screenHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  screenBack: { minWidth: 44, minHeight: 44, paddingHorizontal: 6 },
+  screenHeaderCopy: { flex: 1, gap: 4 },
+  screenRight: { alignItems: "flex-end" },
+  demoBadge: {
+    alignSelf: "flex-start",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
 });

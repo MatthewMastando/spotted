@@ -126,6 +126,10 @@ export class SavedIdeaService {
     );
   }
 
+  async hasUndoableAction(): Promise<boolean> {
+    return (await this.actions.latestUndoable()) !== null;
+  }
+
   async list(state?: "active" | "archived") {
     return this.savedIdeas.list(state);
   }

@@ -2,9 +2,24 @@ import { D } from "./decimal";
 import { formatMoney, formatPercent, formatPrice } from "./format";
 import { LedgerResult } from "./ledger";
 import { returnSinceSave, hypothetical1000 } from "./returns";
+import { dayForDate, MAX_DEMO_DAY } from "./time";
 import { Asset, PricePoint, Quote, SavedIdea, ShareSnapshot } from "./types";
 
 const finePrint = "Excludes fees, taxes, dividends. Not investment advice.";
+
+function shareDate(instant: string, withDemoDay = false): string {
+  const value = new Date(instant);
+  if (!Number.isFinite(value.getTime())) return "Unavailable";
+  const date = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(value);
+  if (!withDemoDay) return date;
+  const day = dayForDate(instant);
+  return day >= 0 && day <= MAX_DEMO_DAY ? `${date} · Demo day ${day}` : date;
+}
 
 export function presentShareSnapshot(
   snapshot: ShareSnapshot,
@@ -82,8 +97,8 @@ export function buildIdeaShareSnapshot(input: {
         : formatPrice(input.saved.savedPrice),
       latestPrice: input.hideAmounts ? "Hidden" : formatPrice(currentPrice),
       hypothetical: input.hideAmounts ? "Hidden" : formatMoney(hypothetical),
-      savedAt: startTime.slice(0, 10),
-      asOf: (input.quote.quoteTime ?? input.createdAt).slice(0, 10),
+      savedAt: shareDate(startTime),
+      asOf: shareDate(input.quote.quoteTime ?? input.createdAt, true),
       basis: "Since I saved",
     },
     raw: {
@@ -134,7 +149,7 @@ export function buildPositionShareSnapshot(input: {
       value: input.hideAmounts ? "Hidden" : formatMoney(input.holding.value),
       latestPrice: input.hideAmounts ? "Hidden" : formatPrice(currentPrice),
       basis: "Paper position",
-      asOf: (input.quote.quoteTime ?? input.createdAt).slice(0, 10),
+      asOf: shareDate(input.quote.quoteTime ?? input.createdAt, true),
     },
     raw: {
       return: returnValue,
@@ -180,7 +195,7 @@ export function buildPortfolioShareSnapshot(input: {
       equity: input.hideAmounts ? "Hidden" : formatMoney(input.ledger.equity),
       cash: input.hideAmounts ? "Hidden" : formatMoney(input.ledger.cash),
       basis: "Paper portfolio",
-      asOf: input.ledger.valuationTime.slice(0, 10),
+      asOf: shareDate(input.ledger.valuationTime, true),
     },
     raw: {
       return: input.ledger.totalPaperReturn,

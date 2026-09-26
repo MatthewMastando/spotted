@@ -40,6 +40,13 @@ function makeBaseSnapshot() {
   });
 }
 
+function renderedText(node: unknown): string[] {
+  if (typeof node === "string") return [node];
+  if (Array.isArray(node)) return node.flatMap(renderedText);
+  if (!node || typeof node !== "object" || !("children" in node)) return [];
+  return renderedText((node as { children?: unknown }).children);
+}
+
 describe("share card preview and capture parity", () => {
   test.each([false, true])(
     "renders identical text for preview and capture with hideAmounts=%s",
@@ -69,18 +76,25 @@ describe("share card preview and capture parity", () => {
           />
         </ThemeProvider>,
       );
-      expect(preview.toJSON()).toEqual(capture.toJSON());
+      expect(renderedText(preview.toJSON())).toEqual(
+        renderedText(capture.toJSON()),
+      );
       expect(preview.getByText(snapshot.display.return)).toBeTruthy();
       expect(preview.getByText(snapshot.display.basis)).toBeTruthy();
       expect(preview.getByText(snapshot.display.savedAt)).toBeTruthy();
       expect(preview.getByText(snapshot.display.asOf)).toBeTruthy();
+      expect(preview.getByText("Saved")).toBeTruthy();
+      expect(preview.getByText("As of")).toBeTruthy();
       expect(snapshot.display.basis).toBe("Since I saved");
-      expect(snapshot.display.savedAt).toBe("2026-09-24");
-      expect(snapshot.display.asOf).toBe("2026-10-15");
+      expect(snapshot.display.savedAt).toBe("Sep 24, 2026");
+      expect(snapshot.display.asOf).toBe("Oct 15, 2026 · Demo day 21");
       if (hideAmounts) {
         expect(snapshot.display.savedPrice).toBe("Hidden");
         expect(snapshot.display.latestPrice).toBe("Hidden");
         expect(snapshot.display.hypothetical).toBe("Hidden");
+        expect(preview.getByText(snapshot.display.basis)).toBeTruthy();
+        expect(preview.getByText(snapshot.display.savedAt)).toBeTruthy();
+        expect(preview.getByText(snapshot.display.asOf)).toBeTruthy();
       }
     },
   );

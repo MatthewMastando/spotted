@@ -10,8 +10,8 @@ import {
   Chip,
   InlineNotice,
   Page,
-  PageTitle,
   Panel,
+  ScreenHeader,
   SectionTitle,
 } from "@/components/ui";
 import { useContainer } from "@/services/ContainerContext";
@@ -107,10 +107,11 @@ export function SettingsScreen() {
 
   return (
     <Page>
-      <PageTitle
+      <ScreenHeader
         eyebrow="CONTROL ROOM"
         title="Settings"
         subtitle="Tune the demo, then jump back into discovery."
+        onBack={() => router.back()}
       />
       <Panel style={styles.panel}>
         <SectionTitle title="Appearance" />
@@ -244,10 +245,11 @@ export function MethodologyScreen() {
   const router = useRouter();
   return (
     <Page>
-      <ActionButton variant="quiet" accessibilityLabel="Go back" onPress={() => router.back()}>
-        ← Back
-      </ActionButton>
-      <PageTitle title="Methodology" subtitle="A plain-language guide to the demo scorecard." />
+      <ScreenHeader
+        title="Methodology"
+        subtitle="A plain-language guide to the demo scorecard."
+        onBack={() => router.back()}
+      />
       <Panel style={styles.panel}>
         <SectionTitle title="Two deliberate baselines" />
         <AppText variant="body" color={palette.textSecondary}>
@@ -285,10 +287,11 @@ export function SimulationInfoScreen() {
   const router = useRouter();
   return (
     <Page>
-      <ActionButton variant="quiet" accessibilityLabel="Go back" onPress={() => router.back()}>
-        ← Back
-      </ActionButton>
-      <PageTitle title="Simulation info" subtitle="Local-only paper investing." />
+      <ScreenHeader
+        title="Simulation info"
+        subtitle="Local-only paper investing."
+        onBack={() => router.back()}
+      />
       <Panel style={styles.panel}>
         <AppText variant="body">
           Swipefolio runs against a bundled set of synthetic assets. The demo clock,
@@ -341,10 +344,11 @@ export function DemoControlsScreen() {
 
   return (
     <Page>
-      <ActionButton variant="quiet" accessibilityLabel="Go back" onPress={() => router.back()}>
-        ← Back
-      </ActionButton>
-      <PageTitle title="Demo clock" subtitle="Advance synthetic market time without using device time." />
+      <ScreenHeader
+        title="Demo clock"
+        subtitle="Advance synthetic market time without using device time."
+        onBack={() => router.back()}
+      />
       <Panel style={styles.panel}>
         <AppText variant="display">{formatDemoDay(settings.clock.dayOffset)}</AppText>
         <View style={styles.clockActions}>

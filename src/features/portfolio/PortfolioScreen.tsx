@@ -2,7 +2,14 @@ import { useMemo, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import type { Holding } from "@/domain/ledger";
-import { formatDate, formatMoney, formatPercent, formatPrice, formatNumber } from "@/domain/format";
+import {
+  formatDate,
+  formatMoney,
+  formatPercent,
+  formatPrice,
+  formatNumber,
+  formatShare,
+} from "@/domain/format";
 import { returnSinceSave } from "@/domain/returns";
 import { fillBasisForQuote } from "@/domain/quotes";
 import { D } from "@/domain/decimal";
@@ -13,8 +20,8 @@ import {
   Chip,
   InlineNotice,
   Page,
-  PageTitle,
   Panel,
+  ScreenHeader,
   SectionTitle,
 } from "@/components/ui";
 import { TYPE_LABELS, quoteAsOfLabel, THEME_LABELS } from "@/features/common/labels";
@@ -53,12 +60,11 @@ export function PortfolioScreen() {
         asset.type,
         (classes.get(asset.type) ?? D(0)).plus(holding.value),
       );
-      for (const theme of asset.themes) {
-        themes.set(
-          theme,
-          (themes.get(theme) ?? D(0)).plus(holding.value),
-        );
-      }
+      const primaryTheme = asset.themes[0];
+      themes.set(
+        primaryTheme,
+        (themes.get(primaryTheme) ?? D(0)).plus(holding.value),
+      );
     }
     return {
       classes: [...classes.entries()]
@@ -72,22 +78,24 @@ export function PortfolioScreen() {
           label: THEME_LABELS[label as keyof typeof THEME_LABELS] ?? label,
           share: value.div(total).toString(),
         }))
-        .sort((left, right) => Number(right.share) - Number(left.share))
-        .slice(0, 5),
+        .sort((left, right) => Number(right.share) - Number(left.share)),
     };
   }, [container, data]);
 
   if (portfolio.loading && !data) {
     return (
       <Page>
-        <PageTitle title="Portfolio" subtitle="Loading your paper account…" />
+        <ScreenHeader title="Portfolio" subtitle="Loading your paper account…" />
       </Page>
     );
   }
   if (!data) {
     return (
       <Page>
-        <PageTitle title="Portfolio" subtitle="Your paper account could not be loaded." />
+        <ScreenHeader
+          title="Portfolio"
+          subtitle="Your paper account could not be loaded."
+        />
         {portfolio.error ? <InlineNotice>{portfolio.error.message}</InlineNotice> : null}
       </Page>
     );
@@ -145,8 +153,8 @@ export function PortfolioScreen() {
   }
 
   return (
-    <Page>
-      <PageTitle
+    <Page contentStyle={styles.pageContent}>
+      <ScreenHeader
         eyebrow="PAPER ACCOUNT"
         title="Portfolio"
         subtitle="A simulated ledger with a $10,000 starting balance."
@@ -212,6 +220,9 @@ export function PortfolioScreen() {
           values={data.history.map((point) => point.equity)}
           color={pnlColor(ledger.totalPaperPnL, palette)}
           summary={`${formatPercent(historyReturn)} since the paper account opened, including cash.`}
+          baseline="10000"
+          startLabel={historyFirst ? formatDate(historyFirst.time) : ""}
+          endLabel={historyLast ? formatDate(historyLast.time) : ""}
         />
       </Panel>
 
@@ -408,6 +419,7 @@ function HoldingCard({
         <ActionButton
           variant="quiet"
           accessibilityLabel={`Share ${asset.ticker} position`}
+          testID="portfolio-share-position"
           onPress={onShare}
           style={styles.smallAction}
         >
@@ -502,8 +514,8 @@ function ConcentrationGroup({
                 ]}
               />
             </View>
-            <AppText variant="small" style={styles.barValue}>
-              {formatPercent(item.share)}
+            <AppText variant="small" numberOfLines={1} style={styles.barValue}>
+              {formatShare(item.share)}
             </AppText>
           </View>
         ))
@@ -523,6 +535,7 @@ function pnlColor(value: string, palette: ReturnType<typeof usePalette>): string
 }
 
 const styles = StyleSheet.create({
+  pageContent: { gap: 16, paddingTop: 12, paddingBottom: 36 },
   summaryPanel: { gap: 10 },
   summaryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 16 },
   summaryStat: { flexGrow: 1, flexBasis: "40%", gap: 3 },
@@ -551,7 +564,7 @@ const styles = StyleSheet.create({
   barLabel: { width: 112 },
   barTrack: { flex: 1, height: 9, borderRadius: 99, overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 99 },
-  barValue: { width: 56, textAlign: "right" },
+  barValue: { width: 64, flexShrink: 0, textAlign: "right" },
   activityPanel: { gap: 12 },
   activityRow: {
     flexDirection: "row",

@@ -27,6 +27,7 @@ import {
   InlineNotice,
   Page,
   Panel,
+  ScreenHeader,
   SectionTitle,
 } from "@/components/ui";
 import { TYPE_LABELS, THEME_LABELS, quoteAsOfLabel } from "@/features/common/labels";
@@ -113,13 +114,11 @@ export function AssetDetailsScreen() {
   if (!asset || !quote) {
     return (
       <Page>
-        <ActionButton
-          variant="quiet"
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        >
-          ← Back
-        </ActionButton>
+        <ScreenHeader
+          title="Asset details"
+          eyebrow="MOCK DATA"
+          onBack={() => router.back()}
+        />
         <Panel>
           <AppText variant="title">Asset not found</AppText>
           <AppText variant="body" color={palette.textSecondary}>
@@ -190,19 +189,11 @@ export function AssetDetailsScreen() {
 
   return (
     <Page>
-      <View style={styles.headerRow}>
-        <ActionButton
-          variant="quiet"
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          ← Back
-        </ActionButton>
-        <AppText variant="label" color={palette.textMuted}>
-          MOCK DATA
-        </AppText>
-      </View>
+      <ScreenHeader
+        title="Asset details"
+        eyebrow="MOCK DATA"
+        onBack={() => router.back()}
+      />
 
       <View style={styles.identity}>
         <View style={[styles.icon, { backgroundColor: asset.iconColor }]}>
@@ -615,12 +606,6 @@ function makeChartSummary(history: PricePoint[], range: RangeLabel): string {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  backButton: { alignSelf: "flex-start", minHeight: 44, paddingHorizontal: 8 },
   identity: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   icon: {
     width: 58,

@@ -8,7 +8,7 @@ import { MockSocialDataProvider } from "@/data/providers/mockSocialDataProvider"
 import { D, toStr } from "@/domain/decimal";
 import { equalSplit, validateAllocations } from "@/domain/allocation";
 import { rankDeck } from "@/domain/deck";
-import { formatMoney } from "@/domain/format";
+import { formatMoney, formatPrice, formatShare } from "@/domain/format";
 import {
   buildPortfolioHistory,
   LedgerResult,
@@ -25,6 +25,7 @@ import {
   socialAttention,
   themeAttentionLabel,
 } from "@/domain/social";
+import { deriveCryptoMarketCap, deriveStockMetrics } from "@/domain/metrics";
 import { dateForDay, dayForDate, valuationInstant } from "@/domain/time";
 import { Portfolio, Quote, ThemeId, Transaction } from "@/domain/types";
 
@@ -239,6 +240,15 @@ describe("domain calculations", () => {
     expect(value).not.toBe(formatMoney(value));
   });
 
+  test("formats grouped money and prices without changing fractional prices", () => {
+    expect(formatMoney("10000")).toBe("$10,000.00");
+    expect(formatMoney("-1234.56")).toBe("-$1,234.56");
+    expect(formatMoney("9986.87")).toBe("$9,986.87");
+    expect(formatPrice("712340")).toBe("$712,340.00");
+    expect(formatPrice("0.00002420")).toBe("$0.0000242");
+    expect(formatShare("0.5083")).toBe("50.8%");
+  });
+
   test("equal split distributes remainder cents to the first lines", () => {
     const split = equalSplit("10.01", 3);
     expect(split).toEqual(["3.34", "3.34", "3.33"]);
@@ -371,6 +381,21 @@ describe("domain calculations", () => {
         passedIds: [],
       }),
     ).toHaveLength(0);
+  });
+
+  test("deck reasons use the display theme label", () => {
+    const ranked = rankDeck({
+      assets: ASSET_FIXTURES,
+      mode: "for_you",
+      seed: "theme-reason",
+      interests: ["ai"],
+      savedThemes: [],
+      activeSavedIds: [],
+      passedIds: [],
+    });
+    expect(ranked.find(({ asset }) => asset.ticker === "NVDA")?.reason).toBe(
+      "Matches your AI interest",
+    );
   });
 
   test("share snapshots reuse tracked returns and paper-ledger totals", () => {
@@ -511,6 +536,90 @@ describe("fixtures and deterministic providers", () => {
       expect(ASSET_FIXTURES.some((asset) => asset.themes.includes(theme))).toBe(
         true,
       );
+    }
+  });
+
+  test("fixture copy and authored metrics are concise and plausible", () => {
+    for (const asset of ASSET_FIXTURES) {
+      for (const copy of [asset.description, asset.thesis, asset.risk]) {
+        expect(copy.length).toBeLessThanOrEqual(110);
+        expect(copy.trim().endsWith(".")).toBe(true);
+      }
+    }
+
+    const stocks = ASSET_FIXTURES.filter(
+      (asset) => asset.type === "stock",
+    );
+    for (const asset of stocks) {
+      if (asset.metrics.kind !== "stock" || asset.metrics.epsTtm === null) continue;
+      const metrics = deriveStockMetrics(
+        asset.market.currentPrice,
+        asset.metrics,
+      );
+      expect(Number(metrics.priceToEarnings)).toBeGreaterThan(0);
+      expect(Number(metrics.priceToEarnings)).toBeLessThanOrEqual(60);
+    }
+    const microsoft = find("stk_msft");
+    if (microsoft.metrics.kind === "stock") {
+      expect(
+        Number(
+          deriveStockMetrics(
+            microsoft.market.currentPrice,
+            microsoft.metrics,
+          ).marketCap,
+        ),
+      ).toBeGreaterThan(3_000_000_000_000);
+    }
+    const amd = find("stk_amd");
+    const lilly = find("stk_lly");
+    if (amd.metrics.kind === "stock") {
+      expect(amd.metrics.revenueTtm).toBeNull();
+      expect(amd.metrics.grossMargin).toBeNull();
+      expect(amd.metrics.cash).toBeNull();
+    }
+    if (lilly.metrics.kind === "stock") {
+      expect(lilly.metrics.epsTtm).toBeNull();
+    }
+    const oracle = find("stk_orcl");
+    if (oracle.metrics.kind === "stock") {
+      expect(oracle.metrics.totalDebt).toBeNull();
+    }
+
+    const etfs = ASSET_FIXTURES.filter((asset) => asset.type === "etf");
+    for (const asset of etfs) {
+      if (asset.metrics.kind !== "etf") continue;
+      expect(Number(asset.metrics.aum)).toBeGreaterThanOrEqual(1_000_000_000);
+      expect(Number(asset.metrics.expenseRatio ?? "0")).toBeLessThanOrEqual(0.01);
+      expect(asset.metrics.holdings.length).toBeGreaterThan(0);
+      expect(asset.metrics.holdings.every(({ name }) => !name.startsWith("Synthetic"))).toBe(true);
+    }
+    const energyEtf = find("etf_xle");
+    const solarEtf = find("etf_tan");
+    if (energyEtf.metrics.kind === "etf") {
+      expect(energyEtf.metrics.expenseRatio).toBeNull();
+    }
+    if (solarEtf.metrics.kind === "etf") {
+      expect(solarEtf.metrics.distributionYield).toBeNull();
+    }
+
+    const bitcoin = find("cry_btc");
+    expect(bitcoin.metrics.kind).toBe("crypto");
+    if (bitcoin.metrics.kind === "crypto") {
+      expect(Number(deriveCryptoMarketCap(bitcoin.market.currentPrice, bitcoin.metrics)))
+        .toBeGreaterThan(2_000_000_000_000);
+    }
+    const ether = find("cry_eth");
+    const dogecoin = find("cry_doge");
+    const near = find("cry_near");
+    if (ether.metrics.kind === "crypto") {
+      expect(ether.metrics.maxSupply).toBeNull();
+    }
+    if (dogecoin.metrics.kind === "crypto") {
+      expect(dogecoin.metrics.maxSupply).toBeNull();
+    }
+    if (near.metrics.kind === "crypto") {
+      expect(near.metrics.maxSupply).not.toBeNull();
+      expect(near.metrics.volume24h).toBeNull();
     }
   });
 

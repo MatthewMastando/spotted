@@ -43,7 +43,7 @@ describe("share card snapshots", () => {
     );
     expect(result.getByText(snapshot.display.return)).toBeTruthy();
     expect(result.getByText(snapshot.display.savedPrice)).toBeTruthy();
-    expect(result.getByText("Simulated")).toBeTruthy();
+    expect(result.getByText(/Simulated · Find your next pick/)).toBeTruthy();
   });
 
   test("renders negative return snapshots without changing their basis", async () => {
@@ -55,6 +55,6 @@ describe("share card snapshots", () => {
     );
     expect(snapshot.raw.return.startsWith("-")).toBe(true);
     expect(result.getByText(snapshot.display.return)).toBeTruthy();
-    expect(result.getByText("Sample journey · Simulated · not your track record")).toBeTruthy();
+    expect(result.getByText(/Sample journey · Simulated/)).toBeTruthy();
   });
 });

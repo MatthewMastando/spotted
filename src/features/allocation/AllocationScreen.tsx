@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { AssetFixture, Quote } from "@/domain/types";
 import {
   equalSplit,
@@ -21,6 +23,7 @@ import {
   Field,
   InlineNotice,
   Panel,
+  ScreenHeader,
   SectionTitle,
 } from "@/components/ui";
 import { TYPE_LABELS, quoteAsOfLabel } from "@/features/common/labels";
@@ -54,6 +57,7 @@ export function AllocationScreen() {
   const container = useContainer();
   const router = useRouter();
   const palette = usePalette();
+  const insets = useSafeAreaInsets();
   const activeIdeas = useSavedIdeas("active");
   const portfolio = usePortfolioData();
   const [selectedIds, setSelectedIds] = useState<string[]>(() =>
@@ -187,22 +191,23 @@ export function AllocationScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.root, { backgroundColor: palette.background }]}
+      style={[
+        styles.root,
+        { backgroundColor: palette.background, paddingTop: insets.top },
+      ]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.header}>
-        <ActionButton
-          variant="quiet"
-          accessibilityLabel="Close allocation"
-          onPress={() => router.back()}
-        >
-          Cancel
-        </ActionButton>
-        <AppText variant="label" color={palette.textMuted}>
-          PAPER ALLOCATION
-        </AppText>
-      </View>
-      <View style={styles.content}>
+      <ScreenHeader
+        title="Allocation"
+        eyebrow="PAPER ALLOCATION"
+        backLabel="Close allocation"
+        onBack={() => router.back()}
+      />
+      <ScrollView
+        style={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+      >
         <View style={styles.titleCopy}>
           <AppText variant="display">Build your paper portfolio</AppText>
           <AppText variant="body" color={palette.textSecondary}>
@@ -282,29 +287,12 @@ export function AllocationScreen() {
                 </AppText>
               </InlineNotice>
             )}
-            <ActionButton
-              accessibilityLabel="Review allocation"
-              accessibilityHint="Review amounts, total, and remaining cash before confirming"
-              disabled={!validation.valid || pending}
-              onPress={review}
-            >
-              Review allocation
-            </ActionButton>
           </>
         ) : (
           <>
             <Panel style={styles.reviewPanel}>
               <SectionTitle
                 title="Ready to confirm"
-                trailing={
-                  <ActionButton
-                    variant="quiet"
-                    accessibilityLabel="Edit allocation"
-                    onPress={() => setStep("edit")}
-                  >
-                    Edit
-                  </ActionButton>
-                }
               />
               {rows.map((row) => (
                 <View key={row.asset.id} style={styles.reviewRow}>
@@ -331,19 +319,50 @@ export function AllocationScreen() {
                 <AppText variant="number">{formatMoney(remainingCash)}</AppText>
               </View>
             </Panel>
-            <ActionButton
-              loading={pending}
-              accessibilityLabel="Confirm paper allocation"
-              accessibilityHint="Create the simulated paper fills and open Portfolio"
-              disabled={pending}
-              onPress={() => void confirm()}
-            >
-              Confirm allocation
-            </ActionButton>
           </>
         )}
         {message ? <InlineNotice>{message}</InlineNotice> : null}
-      </View>
+      </ScrollView>
+      {portfolio.loading && !portfolio.data ? null : (
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: insets.bottom + 12 },
+          ]}
+        >
+          {step === "edit" ? (
+            <ActionButton
+              accessibilityLabel="Review allocation"
+              accessibilityHint="Review amounts, total, and remaining cash before confirming"
+              disabled={!validation.valid || pending}
+              onPress={review}
+            >
+              Review allocation
+            </ActionButton>
+          ) : (
+            <View style={styles.footerActions}>
+              <ActionButton
+                variant="secondary"
+                accessibilityLabel="Back to edit"
+                onPress={() => setStep("edit")}
+                style={styles.footerAction}
+              >
+                Back to edit
+              </ActionButton>
+              <ActionButton
+                loading={pending}
+                accessibilityLabel="Confirm paper allocation"
+                accessibilityHint="Create the simulated paper fills and open Portfolio"
+                disabled={pending}
+                onPress={() => void confirm()}
+                style={styles.footerAction}
+              >
+                Confirm allocation
+              </ActionButton>
+            </View>
+          )}
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -411,21 +430,22 @@ function parseAssetIds(value: string | undefined): string[] {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
-    minHeight: 58,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+  scroll: { flex: 1 },
   content: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 24,
+    paddingBottom: 18,
     gap: 16,
   },
+  footer: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(255,255,255,0.13)",
+  },
+  footerActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  footerAction: { flexGrow: 1, flexBasis: "42%" },
   titleCopy: { gap: 8 },
   totalPanel: { gap: 12 },
   totalCopy: { gap: 6 },

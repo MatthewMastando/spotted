@@ -4,12 +4,20 @@ import { dateForDay } from "./time";
 export const UNAVAILABLE = "Unavailable";
 export const NOT_APPLICABLE = "Not applicable";
 
+function groupThousands(value: string): string {
+  const [integer, fraction] = value.split(".");
+  const sign = integer.startsWith("-") ? "-" : "";
+  const digits = sign ? integer.slice(1) : integer;
+  const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${sign}${grouped}${fraction === undefined ? "" : `.${fraction}`}`;
+}
+
 export function formatMoney(value: string | null): string {
   if (value === null) return UNAVAILABLE;
   const amount = D(value);
   return amount.lt(0)
-    ? `-$${amount.abs().toFixed(2)}`
-    : `$${amount.toFixed(2)}`;
+    ? `-$${groupThousands(amount.abs().toFixed(2))}`
+    : `$${groupThousands(amount.toFixed(2))}`;
 }
 
 export function formatCompactMoney(value: string | null): string {
@@ -30,8 +38,13 @@ export function formatCompactMoney(value: string | null): string {
 export function formatPrice(value: string | null): string {
   if (value === null) return UNAVAILABLE;
   const price = D(value);
-  if (price.gte(1)) return `$${price.toFixed(2)}`;
+  if (price.gte(1)) return `$${groupThousands(price.toFixed(2))}`;
   return `$${price.toFixed(8).replace(/0+$/, "").replace(/\.$/, "")}`;
+}
+
+export function formatShare(value: string | null): string {
+  if (value === null) return UNAVAILABLE;
+  return `${D(value).mul(100).toDecimalPlaces(1).toFixed(1)}%`;
 }
 
 export function formatNumber(

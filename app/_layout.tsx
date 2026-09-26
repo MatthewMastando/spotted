@@ -12,13 +12,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { palettes } from "@/design/tokens";
 import { ThemeProvider, usePalette } from "@/design/theme";
-import { formatDemoDay } from "@/domain/format";
 import { ExpoSqlDb } from "@/persistence/expoDb";
 import { AppContainer, ContainerProvider } from "@/services/ContainerContext";
 import { createContainer } from "@/services/container";
 import { publishSettings, useAppStore } from "@/state/appStore";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 void SplashScreen.preventAutoHideAsync();
@@ -125,7 +124,6 @@ function AppShell({
           <ContainerProvider value={container}>
             <StatusBar style={palette === palettes.light ? "dark" : "light"} />
             <RouteTree settings={settings} />
-            <DemoBadge />
           </ContainerProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>
@@ -161,43 +159,5 @@ function RouteTree({
       <Stack.Screen name="settings/demo" />
       <Stack.Screen name="r/[assetId]" />
     </Stack>
-  );
-}
-
-function DemoBadge() {
-  const settings = useAppStore((state) => state.settings);
-  const palette = usePalette();
-  const insets = useSafeAreaInsets();
-  const day = settings?.clock.dayOffset ?? 0;
-  return (
-    <View
-      pointerEvents="none"
-      style={{
-        position: "absolute",
-        top: insets.top + 4,
-        right: 14,
-        zIndex: 50,
-        paddingHorizontal: 11,
-        paddingVertical: 6,
-        borderRadius: 999,
-        backgroundColor: palette.surfaceRaised,
-        borderColor: palette.border,
-        borderWidth: 1,
-      }}
-      accessible
-      accessibilityRole="text"
-      accessibilityLabel={formatDemoDay(day)}
-    >
-      <Text
-        allowFontScaling
-        style={{
-          color: palette.textSecondary,
-          fontSize: 10,
-          fontFamily: "Inter_600SemiBold",
-        }}
-      >
-        {formatDemoDay(day)}
-      </Text>
-    </View>
   );
 }

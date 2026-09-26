@@ -21,6 +21,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Discover",
+          tabBarButtonTestID: "tab-discover",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons
               name="compass-outline"
@@ -34,6 +35,7 @@ export default function TabLayout() {
         name="saved"
         options={{
           title: "Saved",
+          tabBarButtonTestID: "tab-saved",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons
               name="bookmark-outline"
@@ -47,6 +49,7 @@ export default function TabLayout() {
         name="portfolio"
         options={{
           title: "Portfolio",
+          tabBarButtonTestID: "tab-portfolio",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons
               name="chart-box-outline"

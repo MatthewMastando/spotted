@@ -468,32 +468,1090 @@ const crypto: BaseFixture[] = [
   },
 ];
 
-const themeCopy: Record<ThemeId, string> = {
-  ai: "artificial intelligence",
-  ai_infrastructure: "AI infrastructure",
-  income: "income-oriented investing",
-  energy: "energy demand",
-  nuclear_energy: "nuclear energy",
-  crypto: "digital assets",
-  crypto_infrastructure: "crypto infrastructure",
-  consumer_brands: "consumer brands",
-  broad_market: "broad-market exposure",
-  healthcare: "healthcare",
-  fintech: "financial technology",
-  semiconductors: "semiconductor demand",
-  software: "software",
-  industrial: "industrial activity",
-  fixed_income: "short-term fixed income",
-  defense: "defense and aerospace",
+type AssetCopy = { description: string; thesis: string; risk: string };
+
+const assetCopy: Record<string, AssetCopy> = {
+  NVDA: {
+    description: "NVIDIA makes graphics processors and networking systems for gaming and data centers.",
+    thesis: "GPU demand links its business to accelerated computing and machine-learning workloads.",
+    risk: "Chip cycles, export rules, and concentrated customer spending can affect results.",
+  },
+  MSFT: {
+    description: "Microsoft sells Windows, Microsoft 365, Azure cloud, and business software.",
+    thesis: "Cloud adoption and software subscriptions connect results to enterprise spending.",
+    risk: "Cloud competition, regulation, and infrastructure costs can pressure margins.",
+  },
+  AAPL: {
+    description: "Apple sells iPhone, Mac, iPad, wearables, and related digital services.",
+    thesis: "Device upgrades and recurring services shape its broad consumer ecosystem.",
+    risk: "Product cycles, supply partners, and platform rules can affect sales and margins.",
+  },
+  AMZN: {
+    description: "Amazon combines online retail and logistics with its Amazon Web Services cloud.",
+    thesis: "Retail efficiency and cloud workloads both influence its operating mix.",
+    risk: "Retail margins, labor costs, and cloud competition can change earnings.",
+  },
+  GOOGL: {
+    description: "Alphabet earns chiefly from Google Search, online ads, YouTube, and cloud services.",
+    thesis: "Advertising shifts and cloud adoption shape its mix of established and newer businesses.",
+    risk: "Privacy rules, competition, and changing search habits can affect advertising.",
+  },
+  META: {
+    description: "Meta operates Facebook, Instagram, WhatsApp, and virtual-reality products.",
+    thesis: "Advertising across its social apps funds experiments in new computing platforms.",
+    risk: "Ad demand, privacy rules, and large platform investments can affect results.",
+  },
+  AVGO: {
+    description: "Broadcom supplies semiconductor components and infrastructure software.",
+    thesis: "Data-center connectivity and enterprise software create distinct revenue streams.",
+    risk: "Customer concentration, integration work, and chip cycles can affect performance.",
+  },
+  AMD: {
+    description: "AMD designs processors and graphics chips for computers, servers, and consoles.",
+    thesis: "Server upgrades and accelerated-computing products shape its competitive position.",
+    risk: "Chip launches, manufacturing access, and rivals can shift market share.",
+  },
+  TSLA: {
+    description: "Tesla sells electric vehicles and develops battery storage and charging systems.",
+    thesis: "Vehicle production and energy storage link its results to electrification demand.",
+    risk: "Pricing, production execution, and competition can pressure margins.",
+  },
+  PLTR: {
+    description: "Palantir builds data-analysis platforms for government and commercial customers.",
+    thesis: "More organizations using data tools could influence demand for its software.",
+    risk: "Contract timing, customer concentration, and valuation changes can affect results.",
+  },
+  JPM: {
+    description: "JPMorgan Chase provides consumer banking, lending, payments, and investment services.",
+    thesis: "Its broad banking businesses respond to credit demand and interest-rate conditions.",
+    risk: "Credit losses, regulation, and market swings can affect bank earnings.",
+  },
+  COST: {
+    description: "Costco operates membership warehouses selling groceries and general merchandise.",
+    thesis: "Membership renewals and high store traffic support its warehouse model.",
+    risk: "Thin retail margins, supplier costs, and renewal trends can affect results.",
+  },
+  WMT: {
+    description: "Walmart runs large retail stores, grocery operations, and an expanding online marketplace.",
+    thesis: "Grocery demand and fulfillment efficiency influence its large retail network.",
+    risk: "Low margins, wage costs, and competition can pressure operating results.",
+  },
+  LLY: {
+    description: "Eli Lilly develops and sells medicines across diabetes, obesity, and other conditions.",
+    thesis: "Clinical progress and manufacturing capacity shape its pharmaceutical pipeline.",
+    risk: "Trial outcomes, patents, pricing rules, and production limits can affect sales.",
+  },
+  UNH: {
+    description: "UnitedHealth Group combines health insurance with Optum care and pharmacy services.",
+    thesis: "Insurance membership and healthcare services drive separate parts of its business.",
+    risk: "Medical costs, reimbursement policy, and regulation can change margins.",
+  },
+  XOM: {
+    description: "Exxon Mobil produces oil and gas and operates refining and chemical businesses.",
+    thesis: "Production, refining, and chemicals expose results to several energy markets.",
+    risk: "Commodity prices, project costs, and environmental rules can affect cash flow.",
+  },
+  NEE: {
+    description: "NextEra Energy operates regulated utilities and develops renewable power projects.",
+    thesis: "Electricity demand and renewable construction shape its utility and energy mix.",
+    risk: "Interest rates, project costs, and permitting can affect capital plans.",
+  },
+  CCJ: {
+    description: "Cameco mines uranium and supplies fuel services to nuclear power operators.",
+    thesis: "Utility fuel contracts connect its business to nuclear generation needs.",
+    risk: "Uranium prices, mine operations, and permitting can affect production.",
+  },
+  CEG: {
+    description: "Constellation Energy generates electricity from nuclear and other power plants.",
+    thesis: "Plant output and electricity demand influence its generation portfolio.",
+    risk: "Outages, power prices, and changing market rules can affect earnings.",
+  },
+  ORCL: {
+    description: "Oracle sells database software, business applications, and cloud infrastructure.",
+    thesis: "Cloud migrations and enterprise software renewals shape its recurring business.",
+    risk: "Cloud competition, debt levels, and customer transitions can affect growth.",
+  },
+  CRM: {
+    description: "Salesforce provides cloud software for sales, service, marketing, and customer data.",
+    thesis: "Subscription renewals and broader software adoption drive its platform model.",
+    risk: "IT budgets, competition, and acquisition integration can affect growth.",
+  },
+  TSM: {
+    description: "TSMC manufactures advanced chips for customers that design their own processors.",
+    thesis: "Demand for advanced nodes links its foundries to computing and device cycles.",
+    risk: "Geopolitical tensions, capital spending, and customer cycles can disrupt production.",
+  },
+  INTC: {
+    description: "Intel designs processors and operates semiconductor manufacturing facilities.",
+    thesis: "Product execution and foundry customers influence its manufacturing strategy.",
+    risk: "Factory investment, product delays, and strong rivals can pressure results.",
+  },
+  SMCI: {
+    description: "Super Micro Computer assembles servers and storage systems for data centers.",
+    thesis: "Demand for accelerated computing can affect its rack-scale server business.",
+    risk: "Component access, customer concentration, and rapid product cycles add uncertainty.",
+  },
+  DIS: {
+    description: "Disney produces films and television and operates parks, resorts, and streaming services.",
+    thesis: "Content releases and visitor spending connect its media and experiences businesses.",
+    risk: "Production costs, streaming competition, and tourism trends can affect earnings.",
+  },
+  KO: {
+    description: "Coca-Cola sells beverage brands through a global bottling and distribution network.",
+    thesis: "Brand reach and distribution support sales across many drink categories.",
+    risk: "Consumer preferences, currency moves, and input costs can affect results.",
+  },
+  V: {
+    description: "Visa operates a global electronic payments network connecting merchants and banks.",
+    thesis: "Card spending and cross-border transactions influence payment network volume.",
+    risk: "Regulation, payment alternatives, and slower spending can affect transaction growth.",
+  },
+  NFLX: {
+    description: "Netflix distributes subscription video and produces films, series, and games.",
+    thesis: "Subscriber engagement and content choices shape its global streaming service.",
+    risk: "Content costs, subscriber churn, and intense competition can affect margins.",
+  },
+  XYZ: {
+    description: "Block offers Square merchant tools and Cash App payment and financial services.",
+    thesis: "Merchant activity and consumer use connect its two payments ecosystems.",
+    risk: "Credit losses, transaction volume, and payments regulation can affect results.",
+  },
+  "BRK.A": {
+    description: "Berkshire Hathaway owns businesses and investments across insurance, rail, and utilities.",
+    thesis: "Its operating companies and investment portfolio create a diversified earnings mix.",
+    risk: "Insurance claims, market values, and subsidiary performance can vary.",
+  },
+  VOO: {
+    description: "VOO tracks a market-cap-weighted basket of large U.S. companies in the S&P 500.",
+    thesis: "Large-company performance links the fund to broad U.S. equity market movements.",
+    risk: "Its largest holdings carry substantial weight and the fund can fall with equities.",
+  },
+  SPY: {
+    description: "SPY holds large U.S. companies to track the S&P 500 index.",
+    thesis: "A broad large-company basket reflects changes across major U.S. industries.",
+    risk: "Index concentration and equity-market declines can affect its value.",
+  },
+  VTI: {
+    description: "VTI tracks a broad index spanning large, midsize, and small U.S. stocks.",
+    thesis: "Its wide company range offers exposure to several segments of the U.S. market.",
+    risk: "Small-company holdings and broad equity declines can increase volatility.",
+  },
+  QQQ: {
+    description: "QQQ follows the Nasdaq-100, a large-company index excluding financial firms.",
+    thesis: "Technology and growth-oriented companies drive much of its index exposure.",
+    risk: "Sector and issuer concentration can amplify swings relative to broader indexes.",
+  },
+  SCHD: {
+    description: "SCHD selects U.S. companies using dividend history and quality measures.",
+    thesis: "Dividend screens shape its exposure to established income-producing businesses.",
+    risk: "Sector tilts, dividend changes, and equity declines can affect returns.",
+  },
+  VYM: {
+    description: "VYM holds U.S. companies with relatively higher expected dividend yields.",
+    thesis: "Its yield-focused screen can favor mature firms and particular sectors.",
+    risk: "Dividends may change and yield screens can create sector concentration.",
+  },
+  XLK: {
+    description: "XLK holds technology companies from the S&P 500.",
+    thesis: "Software, hardware, and technology services drive its sector exposure.",
+    risk: "A narrow sector focus can magnify company and industry swings.",
+  },
+  SMH: {
+    description: "SMH invests in companies involved in semiconductor design and manufacturing.",
+    thesis: "Chip demand and production investment influence its concentrated industry basket.",
+    risk: "Semiconductor cycles and a small group of large holdings can drive volatility.",
+  },
+  XLE: {
+    description: "XLE holds energy companies from the S&P 500, including producers and refiners.",
+    thesis: "Oil, gas, and energy-services activity shape its sector-level exposure.",
+    risk: "Commodity prices and a concentrated sector mix can cause sharp swings.",
+  },
+  URNM: {
+    description: "URNM invests in uranium miners and other companies tied to nuclear fuel.",
+    thesis: "Mine output and nuclear-fuel demand influence its specialized holdings.",
+    risk: "Mining costs, uranium prices, and permitting create sector-specific uncertainty.",
+  },
+  IBIT: {
+    description: "IBIT is a trust designed to hold bitcoin and track its market price.",
+    thesis: "The trust provides a listed vehicle whose value follows bitcoin holdings.",
+    risk: "Bitcoin volatility, custody arrangements, and tracking differences affect value.",
+  },
+  XLV: {
+    description: "XLV holds healthcare companies from the S&P 500.",
+    thesis: "Pharmaceutical, equipment, and care providers shape its sector exposure.",
+    risk: "Policy changes, clinical outcomes, and sector concentration can affect results.",
+  },
+  IWM: {
+    description: "IWM tracks an index of smaller publicly traded U.S. companies.",
+    thesis: "Smaller firms can respond differently to domestic growth and credit conditions.",
+    risk: "Small-cap shares can be less liquid and more sensitive to economic shifts.",
+  },
+  TAN: {
+    description: "TAN invests in companies involved in solar power and related equipment.",
+    thesis: "Panel demand and clean-energy project activity influence its industry basket.",
+    risk: "Policy, financing costs, and a narrow sector focus can increase volatility.",
+  },
+  BIL: {
+    description: "BIL holds short-dated U.S. Treasury bills with maturities of one to three months.",
+    thesis: "Frequent bill maturities keep its portfolio tied to short-term interest rates.",
+    risk: "Income can fall as bills mature and are reinvested at lower rates.",
+  },
+  BTC: {
+    description: "Bitcoin is a proof-of-work payment network with a capped issuance schedule.",
+    thesis: "Its fixed issuance and global settlement design shape interest in the network.",
+    risk: "Price swings, custody failures, and changing rules can affect holders.",
+  },
+  ETH: {
+    description: "Ethereum is a programmable blockchain that supports smart contracts and applications.",
+    thesis: "Application activity and network upgrades influence demand for its block space.",
+    risk: "Network competition, protocol changes, and fee volatility can affect usage.",
+  },
+  SOL: {
+    description: "Solana is a high-throughput blockchain for applications and digital assets.",
+    thesis: "Network activity and developer adoption shape demand for transaction capacity.",
+    risk: "Outages, validator concentration, and ecosystem competition can affect confidence.",
+  },
+  XRP: {
+    description: "XRP is a digital asset used within the XRP Ledger payment network.",
+    thesis: "Payment integrations and ledger activity influence use of the network asset.",
+    risk: "Regulatory decisions, token distribution, and payment competition add uncertainty.",
+  },
+  ADA: {
+    description: "Cardano is a proof-of-stake blockchain built for programmable applications.",
+    thesis: "Developer activity and network upgrades shape its smart-contract ecosystem.",
+    risk: "Adoption, governance, and competing networks can affect demand.",
+  },
+  DOGE: {
+    description: "Dogecoin is a proof-of-work cryptocurrency that began as a community project.",
+    thesis: "Community participation and payment use influence its role as a digital currency.",
+    risk: "Uncapped issuance, concentrated ownership, and sentiment can drive price swings.",
+  },
+  LINK: {
+    description: "Chainlink supplies oracle services that connect blockchains with external data.",
+    thesis: "More on-chain applications could influence demand for data and interoperability tools.",
+    risk: "Protocol competition, token incentives, and adoption can affect usage.",
+  },
+  AVAX: {
+    description: "Avalanche is a smart-contract platform with customizable blockchain networks.",
+    thesis: "Application growth and network deployments shape demand for its platform.",
+    risk: "Network competition, token supply, and technical issues can affect value.",
+  },
+  DOT: {
+    description: "Polkadot connects specialized blockchains through a shared security network.",
+    thesis: "Cross-chain activity and ecosystem development influence its network role.",
+    risk: "Complexity, token issuance, and competition can limit adoption.",
+  },
+  LTC: {
+    description: "Litecoin is a proof-of-work cryptocurrency designed for peer-to-peer transfers.",
+    thesis: "Payment activity and its established network history shape ongoing use.",
+    risk: "Competition, mining economics, and limited application demand can affect value.",
+  },
+  UNI: {
+    description: "Uniswap is a decentralized exchange protocol for swapping digital tokens.",
+    thesis: "Trading activity across supported networks can influence protocol usage.",
+    risk: "Smart-contract risks, competition, and governance choices can affect the ecosystem.",
+  },
+  AAVE: {
+    description: "Aave is a decentralized lending protocol for supplying and borrowing crypto assets.",
+    thesis: "Borrowing demand and supported markets shape activity on the protocol.",
+    risk: "Collateral shocks, smart-contract failures, and regulation create risks.",
+  },
+  NEAR: {
+    description: "NEAR Protocol is a proof-of-stake blockchain for decentralized applications.",
+    thesis: "Developer tools and application use influence demand for its network.",
+    risk: "Adoption, validator design, and competing platforms can affect activity.",
+  },
+  HBAR: {
+    description: "Hedera is a distributed ledger that uses hashgraph consensus for applications.",
+    thesis: "Enterprise integrations and network transactions shape its usage.",
+    risk: "Governance concentration, adoption, and token supply can affect demand.",
+  },
+  SHIB: {
+    description: "Shiba Inu is a community-led crypto token with related decentralized projects.",
+    thesis: "Community activity and ecosystem development influence attention to the token.",
+    risk: "Large token supply, speculative demand, and limited liquidity can drive swings.",
+  },
 };
 
-function decimalMetric(value: number): string {
-  return value.toFixed(3);
-}
+type StockFundamentals = {
+  revenueGrowthYoY: string | null;
+  epsTtm: string | null;
+  grossMargin: string | null;
+  operatingMargin: string;
+  revenueTtm: string | null;
+  netIncomeTtm: string;
+  cash: string | null;
+  totalDebt: string | null;
+  freeCashFlowTtm: string;
+  sharesOutstanding: string;
+};
+
+const stockFundamentals: Record<string, StockFundamentals> = {
+  NVDA: {
+    revenueGrowthYoY: "0.114",
+    epsTtm: "2.90",
+    grossMargin: "0.748",
+    operatingMargin: "0.622",
+    revenueTtm: "130500000000",
+    netIncomeTtm: "72000000000",
+    cash: "80000000000",
+    totalDebt: "10000000000",
+    freeCashFlowTtm: "60000000000",
+    sharesOutstanding: "24400000000",
+  },
+  MSFT: {
+    revenueGrowthYoY: "0.135",
+    epsTtm: "13.10",
+    grossMargin: "0.690",
+    operatingMargin: "0.450",
+    revenueTtm: "270000000000",
+    netIncomeTtm: "99000000000",
+    cash: "75000000000",
+    totalDebt: "60000000000",
+    freeCashFlowTtm: "85000000000",
+    sharesOutstanding: "7430000000",
+  },
+  AAPL: {
+    revenueGrowthYoY: "0.042",
+    epsTtm: "7.80",
+    grossMargin: "0.470",
+    operatingMargin: "0.310",
+    revenueTtm: "395000000000",
+    netIncomeTtm: "117000000000",
+    cash: "65000000000",
+    totalDebt: "100000000000",
+    freeCashFlowTtm: "95000000000",
+    sharesOutstanding: "15000000000",
+  },
+  AMZN: {
+    revenueGrowthYoY: "0.105",
+    epsTtm: "5.60",
+    grossMargin: "0.470",
+    operatingMargin: "0.110",
+    revenueTtm: "638000000000",
+    netIncomeTtm: "60000000000",
+    cash: "90000000000",
+    totalDebt: "160000000000",
+    freeCashFlowTtm: "50000000000",
+    sharesOutstanding: "10700000000",
+  },
+  GOOGL: {
+    revenueGrowthYoY: "0.092",
+    epsTtm: "8.40",
+    grossMargin: "0.580",
+    operatingMargin: "0.300",
+    revenueTtm: "350000000000",
+    netIncomeTtm: "105000000000",
+    cash: "95000000000",
+    totalDebt: "25000000000",
+    freeCashFlowTtm: "70000000000",
+    sharesOutstanding: "12150000000",
+  },
+  META: {
+    revenueGrowthYoY: "0.180",
+    epsTtm: "28.60",
+    grossMargin: "0.820",
+    operatingMargin: "0.400",
+    revenueTtm: "165000000000",
+    netIncomeTtm: "67000000000",
+    cash: "75000000000",
+    totalDebt: "30000000000",
+    freeCashFlowTtm: "45000000000",
+    sharesOutstanding: "2540000000",
+  },
+  AVGO: {
+    revenueGrowthYoY: "0.085",
+    epsTtm: "6.30",
+    grossMargin: "0.680",
+    operatingMargin: "0.380",
+    revenueTtm: "65000000000",
+    netIncomeTtm: "24000000000",
+    cash: "15000000000",
+    totalDebt: "65000000000",
+    freeCashFlowTtm: "20000000000",
+    sharesOutstanding: "4730000000",
+  },
+  AMD: {
+    revenueGrowthYoY: null,
+    epsTtm: "3.70",
+    grossMargin: null,
+    operatingMargin: "0.100",
+    revenueTtm: null,
+    netIncomeTtm: "2700000000",
+    cash: null,
+    totalDebt: "1000000000",
+    freeCashFlowTtm: "2000000000",
+    sharesOutstanding: "1630000000",
+  },
+  TSLA: {
+    revenueGrowthYoY: "0.120",
+    epsTtm: "8.70",
+    grossMargin: "0.180",
+    operatingMargin: "0.110",
+    revenueTtm: "95000000000",
+    netIncomeTtm: "12000000000",
+    cash: "30000000000",
+    totalDebt: "5000000000",
+    freeCashFlowTtm: "5000000000",
+    sharesOutstanding: "3220000000",
+  },
+  PLTR: {
+    revenueGrowthYoY: "0.250",
+    epsTtm: "3.10",
+    grossMargin: "0.800",
+    operatingMargin: "0.420",
+    revenueTtm: "18000000000",
+    netIncomeTtm: "7300000000",
+    cash: "5000000000",
+    totalDebt: "500000000",
+    freeCashFlowTtm: "6000000000",
+    sharesOutstanding: "2360000000",
+  },
+  JPM: {
+    revenueGrowthYoY: "0.060",
+    epsTtm: "18.50",
+    grossMargin: "0.620",
+    operatingMargin: "0.340",
+    revenueTtm: "170000000000",
+    netIncomeTtm: "52000000000",
+    cash: "600000000000",
+    totalDebt: "400000000000",
+    freeCashFlowTtm: "30000000000",
+    sharesOutstanding: "2850000000",
+  },
+  COST: {
+    revenueGrowthYoY: "0.070",
+    epsTtm: "24.00",
+    grossMargin: "0.130",
+    operatingMargin: "0.040",
+    revenueTtm: "260000000000",
+    netIncomeTtm: "8000000000",
+    cash: "14000000000",
+    totalDebt: "9000000000",
+    freeCashFlowTtm: "7000000000",
+    sharesOutstanding: "443000000",
+  },
+  WMT: {
+    revenueGrowthYoY: "0.050",
+    epsTtm: "3.10",
+    grossMargin: "0.245",
+    operatingMargin: "0.045",
+    revenueTtm: "680000000000",
+    netIncomeTtm: "25000000000",
+    cash: "10000000000",
+    totalDebt: "65000000000",
+    freeCashFlowTtm: "17000000000",
+    sharesOutstanding: "8040000000",
+  },
+  LLY: {
+    revenueGrowthYoY: "0.300",
+    epsTtm: null,
+    grossMargin: "0.820",
+    operatingMargin: "0.390",
+    revenueTtm: "45000000000",
+    netIncomeTtm: "12000000000",
+    cash: "25000000000",
+    totalDebt: "25000000000",
+    freeCashFlowTtm: "9000000000",
+    sharesOutstanding: "951000000",
+  },
+  UNH: {
+    revenueGrowthYoY: "0.080",
+    epsTtm: "16.00",
+    grossMargin: "0.220",
+    operatingMargin: "0.085",
+    revenueTtm: "430000000000",
+    netIncomeTtm: "22000000000",
+    cash: "30000000000",
+    totalDebt: "70000000000",
+    freeCashFlowTtm: "20000000000",
+    sharesOutstanding: "900000000",
+  },
+  XOM: {
+    revenueGrowthYoY: "0.030",
+    epsTtm: "10.20",
+    grossMargin: "0.350",
+    operatingMargin: "0.125",
+    revenueTtm: "340000000000",
+    netIncomeTtm: "43000000000",
+    cash: "30000000000",
+    totalDebt: "42000000000",
+    freeCashFlowTtm: "35000000000",
+    sharesOutstanding: "4250000000",
+  },
+  NEE: {
+    revenueGrowthYoY: "0.070",
+    epsTtm: "3.00",
+    grossMargin: "0.600",
+    operatingMargin: "0.240",
+    revenueTtm: "25000000000",
+    netIncomeTtm: "7000000000",
+    cash: "5000000000",
+    totalDebt: "80000000000",
+    freeCashFlowTtm: "3000000000",
+    sharesOutstanding: "2100000000",
+  },
+  CCJ: {
+    revenueGrowthYoY: "0.090",
+    epsTtm: "1.80",
+    grossMargin: "0.340",
+    operatingMargin: "0.190",
+    revenueTtm: "3000000000",
+    netIncomeTtm: "800000000",
+    cash: "1000000000",
+    totalDebt: "1000000000",
+    freeCashFlowTtm: "600000000",
+    sharesOutstanding: "433000000",
+  },
+  CEG: {
+    revenueGrowthYoY: "0.110",
+    epsTtm: "9.00",
+    grossMargin: "0.390",
+    operatingMargin: "0.220",
+    revenueTtm: "24000000000",
+    netIncomeTtm: "3000000000",
+    cash: "3000000000",
+    totalDebt: "9000000000",
+    freeCashFlowTtm: "5000000000",
+    sharesOutstanding: "310000000",
+  },
+  ORCL: {
+    revenueGrowthYoY: "0.090",
+    epsTtm: "8.00",
+    grossMargin: "0.700",
+    operatingMargin: "0.330",
+    revenueTtm: "55000000000",
+    netIncomeTtm: "12000000000",
+    cash: "11000000000",
+    totalDebt: null,
+    freeCashFlowTtm: "12000000000",
+    sharesOutstanding: "3000000000",
+  },
+  CRM: {
+    revenueGrowthYoY: "0.100",
+    epsTtm: "7.50",
+    grossMargin: "0.760",
+    operatingMargin: "0.180",
+    revenueTtm: "38000000000",
+    netIncomeTtm: "8000000000",
+    cash: "14000000000",
+    totalDebt: "10000000000",
+    freeCashFlowTtm: "10000000000",
+    sharesOutstanding: "970000000",
+  },
+  TSM: {
+    revenueGrowthYoY: "0.130",
+    epsTtm: "9.60",
+    grossMargin: "0.560",
+    operatingMargin: "0.430",
+    revenueTtm: "95000000000",
+    netIncomeTtm: "42000000000",
+    cash: "60000000000",
+    totalDebt: "30000000000",
+    freeCashFlowTtm: "30000000000",
+    sharesOutstanding: "5170000000",
+  },
+  INTC: {
+    revenueGrowthYoY: "-0.040",
+    epsTtm: "1.20",
+    grossMargin: "0.380",
+    operatingMargin: "0.030",
+    revenueTtm: "55000000000",
+    netIncomeTtm: "5000000000",
+    cash: "25000000000",
+    totalDebt: "50000000000",
+    freeCashFlowTtm: "1000000000",
+    sharesOutstanding: "4200000000",
+  },
+  SMCI: {
+    revenueGrowthYoY: "0.280",
+    epsTtm: "1.25",
+    grossMargin: "0.150",
+    operatingMargin: "0.080",
+    revenueTtm: "26000000000",
+    netIncomeTtm: "1400000000",
+    cash: "2000000000",
+    totalDebt: "5000000000",
+    freeCashFlowTtm: "500000000",
+    sharesOutstanding: "580000000",
+  },
+  DIS: {
+    revenueGrowthYoY: "0.040",
+    epsTtm: "4.30",
+    grossMargin: "0.350",
+    operatingMargin: "0.120",
+    revenueTtm: "92000000000",
+    netIncomeTtm: "8000000000",
+    cash: "7000000000",
+    totalDebt: "45000000000",
+    freeCashFlowTtm: "8000000000",
+    sharesOutstanding: "1820000000",
+  },
+  KO: {
+    revenueGrowthYoY: "0.050",
+    epsTtm: "2.80",
+    grossMargin: "0.600",
+    operatingMargin: "0.250",
+    revenueTtm: "47000000000",
+    netIncomeTtm: "12000000000",
+    cash: "15000000000",
+    totalDebt: "43000000000",
+    freeCashFlowTtm: "10000000000",
+    sharesOutstanding: "4300000000",
+  },
+  V: {
+    revenueGrowthYoY: "0.110",
+    epsTtm: "11.00",
+    grossMargin: "0.800",
+    operatingMargin: "0.660",
+    revenueTtm: "40000000000",
+    netIncomeTtm: "20000000000",
+    cash: "20000000000",
+    totalDebt: "20000000000",
+    freeCashFlowTtm: "20000000000",
+    sharesOutstanding: "1950000000",
+  },
+  NFLX: {
+    revenueGrowthYoY: "0.120",
+    epsTtm: "30.00",
+    grossMargin: "0.450",
+    operatingMargin: "0.250",
+    revenueTtm: "42000000000",
+    netIncomeTtm: "12000000000",
+    cash: "8000000000",
+    totalDebt: "15000000000",
+    freeCashFlowTtm: "7000000000",
+    sharesOutstanding: "430000000",
+  },
+  XYZ: {
+    revenueGrowthYoY: "0.120",
+    epsTtm: "2.30",
+    grossMargin: "0.380",
+    operatingMargin: "0.100",
+    revenueTtm: "25000000000",
+    netIncomeTtm: "1400000000",
+    cash: "10000000000",
+    totalDebt: "5000000000",
+    freeCashFlowTtm: "1500000000",
+    sharesOutstanding: "600000000",
+  },
+  "BRK.A": {
+    revenueGrowthYoY: "0.050",
+    epsTtm: "43000.00",
+    grossMargin: "0.250",
+    operatingMargin: "0.120",
+    revenueTtm: "370000000000",
+    netIncomeTtm: "40000000000",
+    cash: "170000000000",
+    totalDebt: "120000000000",
+    freeCashFlowTtm: "30000000000",
+    sharesOutstanding: "1450000",
+  },
+};
+
+type EtfDetails = {
+  expenseRatio: string | null;
+  distributionYield: string | null;
+  top10Concentration: string;
+  aum: string;
+  objective: string;
+  holdings: { name: string; weight: string }[];
+  exposures: { label: string; weight: string }[];
+  distributionNotes: string;
+};
+
+const etfDetails: Record<string, EtfDetails> = {
+  VOO: {
+    expenseRatio: "0.0003",
+    distributionYield: "0.013",
+    top10Concentration: "0.370",
+    aum: "650000000000",
+    objective: "Tracks large U.S. companies represented in the S&P 500 index.",
+    holdings: [
+      { name: "Microsoft", weight: "0.071" },
+      { name: "NVIDIA", weight: "0.068" },
+      { name: "Apple", weight: "0.061" },
+    ],
+    exposures: [
+      { label: "Information technology", weight: "0.310" },
+      { label: "Financials", weight: "0.130" },
+      { label: "Other sectors", weight: "0.560" },
+    ],
+    distributionNotes: "Distributions reflect dividends from underlying companies and are not guaranteed.",
+  },
+  SPY: {
+    expenseRatio: "0.000945",
+    distributionYield: "0.012",
+    top10Concentration: "0.365",
+    aum: "620000000000",
+    objective: "Seeks to track the S&P 500 index of large U.S. companies.",
+    holdings: [
+      { name: "Microsoft", weight: "0.070" },
+      { name: "NVIDIA", weight: "0.067" },
+      { name: "Apple", weight: "0.060" },
+    ],
+    exposures: [
+      { label: "Information technology", weight: "0.305" },
+      { label: "Financials", weight: "0.135" },
+      { label: "Other sectors", weight: "0.560" },
+    ],
+    distributionNotes: "Distributions reflect dividends from underlying companies and are not guaranteed.",
+  },
+  VTI: {
+    expenseRatio: "0.0003",
+    distributionYield: "0.013",
+    top10Concentration: "0.300",
+    aum: "520000000000",
+    objective: "Tracks an index covering large, midsize, and small U.S. companies.",
+    holdings: [
+      { name: "Microsoft", weight: "0.060" },
+      { name: "NVIDIA", weight: "0.057" },
+      { name: "Apple", weight: "0.052" },
+    ],
+    exposures: [
+      { label: "Large-cap stocks", weight: "0.820" },
+      { label: "Mid-cap stocks", weight: "0.140" },
+      { label: "Small-cap stocks", weight: "0.040" },
+    ],
+    distributionNotes: "Distributions reflect dividends from underlying companies and are not guaranteed.",
+  },
+  QQQ: {
+    expenseRatio: "0.002",
+    distributionYield: "0.006",
+    top10Concentration: "0.510",
+    aum: "330000000000",
+    objective: "Tracks the Nasdaq-100 index of large nonfinancial companies.",
+    holdings: [
+      { name: "Microsoft", weight: "0.086" },
+      { name: "NVIDIA", weight: "0.083" },
+      { name: "Apple", weight: "0.078" },
+    ],
+    exposures: [
+      { label: "Technology", weight: "0.510" },
+      { label: "Consumer services", weight: "0.220" },
+      { label: "Other industries", weight: "0.270" },
+    ],
+    distributionNotes: "Distributions vary with dividends from index constituents.",
+  },
+  SCHD: {
+    expenseRatio: "0.0006",
+    distributionYield: "0.035",
+    top10Concentration: "0.410",
+    aum: "70000000000",
+    objective: "Selects U.S. dividend companies using history and fundamental screens.",
+    holdings: [
+      { name: "Cisco Systems", weight: "0.043" },
+      { name: "Home Depot", weight: "0.042" },
+      { name: "Texas Instruments", weight: "0.041" },
+    ],
+    exposures: [
+      { label: "Consumer staples", weight: "0.190" },
+      { label: "Health care", weight: "0.150" },
+      { label: "Other sectors", weight: "0.660" },
+    ],
+    distributionNotes: "The fund distributes income from portfolio dividends, which can change.",
+  },
+  VYM: {
+    expenseRatio: "0.0006",
+    distributionYield: "0.028",
+    top10Concentration: "0.270",
+    aum: "80000000000",
+    objective: "Tracks U.S. companies with relatively higher expected dividend yields.",
+    holdings: [
+      { name: "Broadcom", weight: "0.071" },
+      { name: "JPMorgan Chase", weight: "0.039" },
+      { name: "Exxon Mobil", weight: "0.027" },
+    ],
+    exposures: [
+      { label: "Financials", weight: "0.210" },
+      { label: "Consumer staples", weight: "0.130" },
+      { label: "Other sectors", weight: "0.660" },
+    ],
+    distributionNotes: "The fund distributes income from portfolio dividends, which can change.",
+  },
+  XLK: {
+    expenseRatio: "0.0009",
+    distributionYield: "0.007",
+    top10Concentration: "0.720",
+    aum: "80000000000",
+    objective: "Provides exposure to technology companies in the S&P 500.",
+    holdings: [
+      { name: "Microsoft", weight: "0.250" },
+      { name: "NVIDIA", weight: "0.220" },
+      { name: "Apple", weight: "0.200" },
+    ],
+    exposures: [
+      { label: "Software", weight: "0.450" },
+      { label: "Semiconductors", weight: "0.350" },
+      { label: "Technology hardware", weight: "0.200" },
+    ],
+    distributionNotes: "Distributions are based on dividends from technology holdings.",
+  },
+  SMH: {
+    expenseRatio: "0.0035",
+    distributionYield: "0.005",
+    top10Concentration: "0.690",
+    aum: "30000000000",
+    objective: "Tracks companies involved in semiconductor design and manufacturing.",
+    holdings: [
+      { name: "NVIDIA", weight: "0.200" },
+      { name: "TSMC", weight: "0.120" },
+      { name: "Broadcom", weight: "0.100" },
+    ],
+    exposures: [
+      { label: "Chip designers", weight: "0.570" },
+      { label: "Foundries", weight: "0.250" },
+      { label: "Equipment and other", weight: "0.180" },
+    ],
+    distributionNotes: "Distributions vary and are not the fund's primary objective.",
+  },
+  XLE: {
+    expenseRatio: null,
+    distributionYield: "0.033",
+    top10Concentration: "0.720",
+    aum: "35000000000",
+    objective: "Holds energy companies included in the S&P 500 index.",
+    holdings: [
+      { name: "Exxon Mobil", weight: "0.230" },
+      { name: "Chevron", weight: "0.160" },
+      { name: "ConocoPhillips", weight: "0.080" },
+    ],
+    exposures: [
+      { label: "Integrated oil and gas", weight: "0.500" },
+      { label: "Exploration and production", weight: "0.300" },
+      { label: "Other energy", weight: "0.200" },
+    ],
+    distributionNotes: "Distributions depend on dividends from energy holdings and can fluctuate.",
+  },
+  URNM: {
+    expenseRatio: "0.0075",
+    distributionYield: "0.012",
+    top10Concentration: "0.720",
+    aum: "5000000000",
+    objective: "Invests in uranium miners and businesses tied to nuclear fuel.",
+    holdings: [
+      { name: "Cameco", weight: "0.180" },
+      { name: "Kazatomprom", weight: "0.140" },
+      { name: "NexGen Energy", weight: "0.090" },
+    ],
+    exposures: [
+      { label: "Uranium miners", weight: "0.650" },
+      { label: "Physical uranium", weight: "0.200" },
+      { label: "Other nuclear fuel", weight: "0.150" },
+    ],
+    distributionNotes: "Distributions are variable and are not a central feature of the strategy.",
+  },
+  IBIT: {
+    expenseRatio: "0.0025",
+    distributionYield: "0.000",
+    top10Concentration: "1.000",
+    aum: "70000000000",
+    objective: "Seeks to reflect bitcoin's price through bitcoin held by the trust.",
+    holdings: [{ name: "Bitcoin", weight: "1.000" }],
+    exposures: [{ label: "Bitcoin", weight: "1.000" }],
+    distributionNotes: "The trust does not seek to generate income or make regular distributions.",
+  },
+  XLV: {
+    expenseRatio: "0.0009",
+    distributionYield: "0.015",
+    top10Concentration: "0.570",
+    aum: "40000000000",
+    objective: "Provides exposure to healthcare companies in the S&P 500.",
+    holdings: [
+      { name: "Eli Lilly", weight: "0.120" },
+      { name: "UnitedHealth Group", weight: "0.090" },
+      { name: "Johnson & Johnson", weight: "0.075" },
+    ],
+    exposures: [
+      { label: "Pharmaceuticals", weight: "0.350" },
+      { label: "Health care equipment", weight: "0.250" },
+      { label: "Other healthcare", weight: "0.400" },
+    ],
+    distributionNotes: "Distributions reflect dividends from healthcare holdings and may vary.",
+  },
+  IWM: {
+    expenseRatio: "0.0019",
+    distributionYield: "0.012",
+    top10Concentration: "0.060",
+    aum: "60000000000",
+    objective: "Tracks a broad index of smaller U.S. publicly traded companies.",
+    holdings: [
+      { name: "Fabrinet", weight: "0.004" },
+      { name: "Sprouts Farmers Market", weight: "0.004" },
+      { name: "FTAI Aviation", weight: "0.004" },
+    ],
+    exposures: [
+      { label: "Industrials", weight: "0.180" },
+      { label: "Financials", weight: "0.170" },
+      { label: "Other sectors", weight: "0.650" },
+    ],
+    distributionNotes: "Distributions come from underlying holdings and can vary.",
+  },
+  TAN: {
+    expenseRatio: "0.0067",
+    distributionYield: null,
+    top10Concentration: "0.650",
+    aum: "1000000000",
+    objective: "Invests in companies involved in solar energy and related equipment.",
+    holdings: [
+      { name: "First Solar", weight: "0.100" },
+      { name: "Enphase Energy", weight: "0.090" },
+      { name: "SolarEdge Technologies", weight: "0.070" },
+    ],
+    exposures: [
+      { label: "Solar equipment", weight: "0.550" },
+      { label: "Solar developers", weight: "0.300" },
+      { label: "Other clean energy", weight: "0.150" },
+    ],
+    distributionNotes: "Distribution data is unavailable for this synthetic fixture.",
+  },
+  BIL: {
+    expenseRatio: "0.0014",
+    distributionYield: "0.041",
+    top10Concentration: "1.000",
+    aum: "40000000000",
+    objective: "Holds U.S. Treasury bills with maturities from one to three months.",
+    holdings: [{ name: "U.S. Treasury bill", weight: "1.000" }],
+    exposures: [{ label: "Treasury bills", weight: "1.000" }],
+    distributionNotes: "Income reflects short-term Treasury yields and changes as bills mature.",
+  },
+};
+
+type CryptoDetails = {
+  circulatingSupply: string | null;
+  maxSupply: string | null;
+  volume24h: string | null;
+  networkPurpose: string;
+  supplyStructure: string;
+  tokenRisks: string;
+};
+
+const cryptoDetails: Record<string, CryptoDetails> = {
+  BTC: {
+    circulatingSupply: "19900000",
+    maxSupply: "21000000",
+    volume24h: "32000000000",
+    networkPurpose: "A proof-of-work network for peer-to-peer value transfer and settlement.",
+    supplyStructure: "Issuance follows a published schedule with a 21 million unit cap.",
+    tokenRisks: "Mining concentration, custody, and changing regulation can affect network access.",
+  },
+  ETH: {
+    circulatingSupply: "120700000",
+    maxSupply: null,
+    volume24h: "18000000000",
+    networkPurpose: "A programmable blockchain supporting smart contracts and decentralized applications.",
+    supplyStructure: "There is no fixed maximum supply; issuance and fee burns change net supply.",
+    tokenRisks: "Network fees, protocol changes, and competing platforms can affect usage.",
+  },
+  SOL: {
+    circulatingSupply: "550000000",
+    maxSupply: "1000000000",
+    volume24h: "4500000000",
+    networkPurpose: "A proof-of-stake network designed for high-throughput applications and token transfers.",
+    supplyStructure: "Supply expands through scheduled issuance and validator rewards.",
+    tokenRisks: "Outages, validator concentration, and ecosystem competition can affect confidence.",
+  },
+  XRP: {
+    circulatingSupply: "60000000000",
+    maxSupply: "100000000000",
+    volume24h: "1700000000",
+    networkPurpose: "The XRP Ledger supports token transfers and payment-related applications.",
+    supplyStructure: "The ledger began with a fixed 100 billion XRP supply.",
+    tokenRisks: "Distribution, legal decisions, and payment-network competition can affect demand.",
+  },
+  ADA: {
+    circulatingSupply: "36000000000",
+    maxSupply: "45000000000",
+    volume24h: "450000000",
+    networkPurpose: "A proof-of-stake blockchain for smart contracts and decentralized applications.",
+    supplyStructure: "ADA has a fixed maximum supply of 45 billion units.",
+    tokenRisks: "Adoption, governance, and competing networks can affect ecosystem use.",
+  },
+  DOGE: {
+    circulatingSupply: "150000000000",
+    maxSupply: null,
+    volume24h: "1200000000",
+    networkPurpose: "A proof-of-work network used for peer-to-peer cryptocurrency transfers.",
+    supplyStructure: "New DOGE is issued continuously without a fixed maximum supply.",
+    tokenRisks: "Uncapped issuance, concentrated ownership, and sentiment can drive price swings.",
+  },
+  LINK: {
+    circulatingSupply: "678000000",
+    maxSupply: "1000000000",
+    volume24h: "450000000",
+    networkPurpose: "Chainlink provides oracle services that connect blockchains to external data.",
+    supplyStructure: "LINK has a modeled maximum supply of one billion tokens.",
+    tokenRisks: "Protocol competition, incentives, and adoption can affect demand for the token.",
+  },
+  AVAX: {
+    circulatingSupply: "420000000",
+    maxSupply: "720000000",
+    volume24h: "350000000",
+    networkPurpose: "Avalanche supports smart contracts and customizable blockchain networks.",
+    supplyStructure: "AVAX has a capped supply with staking rewards and transaction fee burns.",
+    tokenRisks: "Network competition, token supply, and technical issues can affect value.",
+  },
+  DOT: {
+    circulatingSupply: "1500000000",
+    maxSupply: "2100000000",
+    volume24h: "250000000",
+    networkPurpose: "Polkadot connects specialized blockchains through shared security and messaging.",
+    supplyStructure: "DOT issuance is modeled as an expanding supply used for network incentives.",
+    tokenRisks: "Complexity, token issuance, and competition can limit adoption.",
+  },
+  LTC: {
+    circulatingSupply: "76000000",
+    maxSupply: "84000000",
+    volume24h: "600000000",
+    networkPurpose: "Litecoin is a proof-of-work network for peer-to-peer digital payments.",
+    supplyStructure: "Mining rewards follow a schedule with an 84 million unit maximum.",
+    tokenRisks: "Competition, mining economics, and limited application demand can affect value.",
+  },
+  UNI: {
+    circulatingSupply: "600000000",
+    maxSupply: "1000000000",
+    volume24h: "300000000",
+    networkPurpose: "Uniswap provides decentralized token-swapping markets across supported networks.",
+    supplyStructure: "UNI has a modeled maximum supply of one billion tokens.",
+    tokenRisks: "Smart-contract risks, competition, and governance choices can affect the ecosystem.",
+  },
+  AAVE: {
+    circulatingSupply: "15000000",
+    maxSupply: "16000000",
+    volume24h: "250000000",
+    networkPurpose: "Aave supports decentralized lending and borrowing of digital assets.",
+    supplyStructure: "AAVE supply is capped, with tokens used in protocol governance and incentives.",
+    tokenRisks: "Collateral shocks, smart-contract failures, and regulation create risks.",
+  },
+  NEAR: {
+    circulatingSupply: "1200000000",
+    maxSupply: "1500000000",
+    volume24h: null,
+    networkPurpose: "NEAR is a proof-of-stake blockchain supporting decentralized applications.",
+    supplyStructure: "This fixture models issuance and fee burns within a 1.5 billion token cap.",
+    tokenRisks: "Adoption, validator design, and competing platforms can affect activity.",
+  },
+  HBAR: {
+    circulatingSupply: "42000000000",
+    maxSupply: "50000000000",
+    volume24h: "120000000",
+    networkPurpose: "Hedera uses hashgraph consensus to provide a distributed ledger for applications.",
+    supplyStructure: "HBAR has a fixed maximum supply of 50 billion tokens.",
+    tokenRisks: "Governance concentration, adoption, and token distribution can affect demand.",
+  },
+  SHIB: {
+    circulatingSupply: "589500000000000",
+    maxSupply: "1000000000000000",
+    volume24h: "350000000",
+    networkPurpose: "Shiba Inu is a community token with associated decentralized applications.",
+    supplyStructure: "The fixture models a large circulating balance against an initial quadrillion supply.",
+    tokenRisks: "Large token supply, speculative demand, and limited liquidity can drive swings.",
+  },
+};
 
 function buildStock(item: BaseFixture, index: number): AssetFixture {
-  const primaryTheme = themeCopy[item.themes[0]];
-  const nullMetrics = index === 7;
+  const copy = assetCopy[item.ticker];
+  const fundamentals = stockFundamentals[item.ticker];
   return {
     id: `stk_${item.ticker.toLowerCase().replace(".", "_")}`,
     type: "stock",
@@ -502,30 +1560,23 @@ function buildStock(item: BaseFixture, index: number): AssetFixture {
     currency: "USD",
     themes: item.themes,
     sector: item.sector,
-    description: `${item.name} is a ${item.sector.toLowerCase()} company in this synthetic market set.`,
-    thesis: `Its exposure to ${primaryTheme} may matter if demand continues to evolve.`,
-    risk: `${item.sector} companies can face competition, valuation swings, and changing demand.`,
+    description: copy.description,
+    thesis: copy.thesis,
+    risk: copy.risk,
     iconInitials: item.ticker.slice(0, 2),
     iconColor: iconColor(index),
     metrics: {
       kind: "stock",
-      revenueGrowthYoY: nullMetrics
-        ? null
-        : decimalMetric(0.035 + (index % 16) * 0.019),
-      epsTtm: index === 13 ? null : decimalMetric(1.2 + (index % 21) * 0.81),
-      grossMargin: nullMetrics
-        ? null
-        : decimalMetric(0.21 + (index % 8) * 0.047),
-      operatingMargin: decimalMetric(0.04 + (index % 11) * 0.024),
-      revenueTtm: nullMetrics
-        ? null
-        : String(2_100_000_000 + index * 1_470_000_000),
-      netIncomeTtm: decimalMetric(350_000_000 + index * 194_000_000),
-      cash: index === 7 ? null : String(900_000_000 + index * 230_000_000),
-      totalDebt:
-        index === 19 ? null : String(280_000_000 + index * 185_000_000),
-      freeCashFlowTtm: decimalMetric(170_000_000 + index * 127_000_000),
-      sharesOutstanding: String(750_000_000 + index * 63_000_000),
+      revenueGrowthYoY: fundamentals.revenueGrowthYoY,
+      epsTtm: fundamentals.epsTtm,
+      grossMargin: fundamentals.grossMargin,
+      operatingMargin: fundamentals.operatingMargin,
+      revenueTtm: fundamentals.revenueTtm,
+      netIncomeTtm: fundamentals.netIncomeTtm,
+      cash: fundamentals.cash,
+      totalDebt: fundamentals.totalDebt,
+      freeCashFlowTtm: fundamentals.freeCashFlowTtm,
+      sharesOutstanding: fundamentals.sharesOutstanding,
       peers: stocks
         .filter(
           (peer) => peer.sector === item.sector && peer.ticker !== item.ticker,
@@ -557,7 +1608,8 @@ function buildStock(item: BaseFixture, index: number): AssetFixture {
 }
 
 function buildEtf(item: BaseFixture, index: number): AssetFixture {
-  const primaryTheme = themeCopy[item.themes[0]];
+  const copy = assetCopy[item.ticker];
+  const details = etfDetails[item.ticker];
   return {
     id: `etf_${item.ticker.toLowerCase()}`,
     type: "etf",
@@ -566,42 +1618,21 @@ function buildEtf(item: BaseFixture, index: number): AssetFixture {
     currency: "USD",
     themes: item.themes,
     sector: item.sector,
-    description: `${item.name} is an exchange-traded fund focused on ${primaryTheme}.`,
-    thesis: `A single fund can offer a simple way to explore ${primaryTheme}.`,
-    risk: "Fund prices can fall with their holdings; concentration and expenses vary by strategy.",
+    description: copy.description,
+    thesis: copy.thesis,
+    risk: copy.risk,
     iconInitials: item.ticker.slice(0, 2),
     iconColor: iconColor(index + stocks.length),
     metrics: {
       kind: "etf",
-      expenseRatio:
-        index === 8 ? null : decimalMetric(0.0003 + (index % 6) * 0.0014),
-      distributionYield:
-        index === 13 ? null : decimalMetric(0.006 + (index % 7) * 0.009),
-      top10Concentration: decimalMetric(0.19 + (index % 7) * 0.071),
-      aum: String(1_400_000_000 + index * 7_300_000_000),
-      objective: `Provides synthetic exposure to ${primaryTheme}.`,
-      holdings: [
-        {
-          name: "Synthetic Holding A",
-          weight: decimalMetric(0.12 + (index % 3) * 0.02),
-        },
-        {
-          name: "Synthetic Holding B",
-          weight: decimalMetric(0.08 + (index % 4) * 0.01),
-        },
-      ],
-      exposures: [
-        {
-          label: item.sector,
-          weight: decimalMetric(0.42 + (index % 5) * 0.08),
-        },
-        {
-          label: "Other sectors",
-          weight: decimalMetric(0.58 - (index % 5) * 0.08),
-        },
-      ],
-      distributionNotes:
-        "Synthetic distribution profile; no cash distributions are modeled.",
+      expenseRatio: details.expenseRatio,
+      distributionYield: details.distributionYield,
+      top10Concentration: details.top10Concentration,
+      aum: details.aum,
+      objective: details.objective,
+      holdings: details.holdings,
+      exposures: details.exposures,
+      distributionNotes: details.distributionNotes,
     },
     market: {
       currentPrice: item.price,
@@ -622,7 +1653,8 @@ function buildEtf(item: BaseFixture, index: number): AssetFixture {
 }
 
 function buildCrypto(item: BaseFixture, index: number): AssetFixture {
-  const primaryTheme = themeCopy[item.themes[0]];
+  const copy = assetCopy[item.ticker];
+  const details = cryptoDetails[item.ticker];
   return {
     id: `cry_${item.ticker.toLowerCase()}`,
     type: "crypto",
@@ -631,30 +1663,19 @@ function buildCrypto(item: BaseFixture, index: number): AssetFixture {
     currency: "USD",
     themes: item.themes,
     sector: item.sector,
-    description: `${item.name} is a digital asset associated with ${primaryTheme}.`,
-    thesis: `Its network may attract interest as ${primaryTheme} develops.`,
-    risk: "Digital assets can be highly volatile and face liquidity, technology, and regulatory risks.",
+    description: copy.description,
+    thesis: copy.thesis,
+    risk: copy.risk,
     iconInitials: item.ticker.slice(0, 2),
     iconColor: iconColor(index + stocks.length + etfs.length),
     metrics: {
       kind: "crypto",
-      circulatingSupply:
-        index === 14
-          ? "589500000000000"
-          : String(7_500_000 + index * 3_670_000),
-      maxSupply:
-        index === 1 || index === 5
-          ? null
-          : String(21_000_000 + index * 9_700_000),
-      volume24h:
-        index === 12 ? null : String(240_000_000 + index * 412_000_000),
-      networkPurpose: `Synthetic description of ${item.name}'s network role in ${primaryTheme}.`,
-      supplyStructure:
-        index === 1
-          ? "No fixed maximum supply in this synthetic fixture."
-          : "A capped supply is modeled for this fixture.",
-      tokenRisks:
-        "Protocol design, concentration, and market liquidity can change materially.",
+      circulatingSupply: details.circulatingSupply,
+      maxSupply: details.maxSupply,
+      volume24h: details.volume24h,
+      networkPurpose: details.networkPurpose,
+      supplyStructure: details.supplyStructure,
+      tokenRisks: details.tokenRisks,
     },
     market: {
       currentPrice: item.price,

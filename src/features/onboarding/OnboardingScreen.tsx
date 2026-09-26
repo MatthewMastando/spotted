@@ -208,7 +208,7 @@ function JourneyStep({
   const palette = usePalette();
   return (
     <View style={styles.step}>
-      <AppText variant="label" color={palette.accent}>
+      <AppText variant="label" color={palette.accent} style={styles.stepNumber}>
         {number}
       </AppText>
       <View style={styles.stepCopy}>
@@ -234,6 +234,11 @@ const styles = StyleSheet.create({
   intro: { gap: 10, maxWidth: 560 },
   steps: { gap: 14 },
   step: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
+  stepNumber: {
+    width: 38,
+    flexShrink: 0,
+    fontVariant: ["tabular-nums"],
+  },
   stepCopy: { flex: 1, gap: 2 },
   interestsPanel: { gap: 16 },
   interestHeading: { gap: 4 },

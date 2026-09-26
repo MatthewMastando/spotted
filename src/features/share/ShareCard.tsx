@@ -1,6 +1,10 @@
-import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { LayoutChangeEvent, StyleSheet, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import type { ShareSnapshot } from "@/domain/types";
+import { D } from "@/domain/decimal";
 import { AppText } from "@/components/ui";
+import { makePath } from "@/components/Chart";
 
 export type ShareTheme = "lime" | "violet" | "sunset";
 export type ShareCardLayout = "portrait" | "square";
@@ -50,8 +54,38 @@ export function ShareCard({
 }) {
   const colors = THEMES[theme];
   const square = layout === "square";
-  const returnIsNegative = snapshot.raw.return.startsWith("-");
-  const resultColor = returnIsNegative ? "#FF8B8B" : colors.positive;
+  const resultReturn = D(snapshot.raw.return);
+  const resultColor = resultReturn.isNegative()
+    ? "#FF8B8B"
+    : resultReturn.isZero()
+      ? "#B9C0B2"
+      : colors.positive;
+  const [chartWidth, setChartWidth] = useState(0);
+  const chartHeight = square ? 44 : 74;
+  const chartValues = snapshot.chart.map((point) => point.price);
+  const chartPath = makePath(chartValues, chartWidth, chartHeight);
+  const areaPath = chartPath
+    ? `${chartPath} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`
+    : "";
+  const markerTime = snapshot.markers[0]?.time;
+  const markerIndex = markerTime
+    ? snapshot.chart.findIndex((point) => point.time >= markerTime)
+    : -1;
+  const markerX =
+    markerIndex >= 0 && snapshot.chart.length > 1
+      ? (markerIndex / (snapshot.chart.length - 1)) * chartWidth
+      : null;
+  const factLabels: Record<string, string> = {
+    pnl: "Paper P&L",
+    value: "Position value",
+    latestPrice: "Latest price",
+    savedPrice: "Saved price",
+    hypothetical: "$1,000 would be",
+    equity: "Paper equity",
+    cash: "Cash",
+    savedAt: "Saved",
+    asOf: "As of",
+  };
   const title =
     snapshot.kind === "portfolio"
       ? "My paper portfolio"
@@ -132,23 +166,36 @@ export function ShareCard({
           {snapshot.display.basis}
         </AppText>
       </View>
-      <View style={[styles.chart, square ? styles.chartSquare : null]}>
-        {snapshot.chart.length > 1 ? (
-          snapshot.chart.map((point, index) => (
-            <View
-              key={`${point.time}-${index}`}
-              style={[
-                styles.chartBar,
-                {
-                  height: `${Math.max(
-                    10,
-                    Math.min(100, Number(point.price) / Math.max(Number(point.price), 1) * 72),
-                  )}%`,
-                  backgroundColor: resultColor,
-                },
-              ]}
+      <View
+        accessibilityRole="image"
+        accessibilityLabel={`Result price chart for ${snapshot.ticker ?? "the portfolio"}`}
+        style={[styles.chart, { height: chartHeight }]}
+        onLayout={(event: LayoutChangeEvent) =>
+          setChartWidth(event.nativeEvent.layout.width)
+        }
+      >
+        {chartPath ? (
+          <Svg width={chartWidth} height={chartHeight}>
+            <Path d={areaPath} fill={resultColor} opacity={0.14} />
+            {markerX !== null ? (
+              <Path
+                d={`M ${markerX} 0 L ${markerX} ${chartHeight}`}
+                fill="none"
+                stroke="#FFFFFF"
+                strokeDasharray="3 3"
+                strokeWidth={1}
+                opacity={0.62}
+              />
+            ) : null}
+            <Path
+              d={chartPath}
+              fill="none"
+              stroke={resultColor}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
-          ))
+          </Svg>
         ) : (
           <AppText variant="small" color="#B9C0B2">
             Chart data is unavailable.
@@ -161,11 +208,10 @@ export function ShareCard({
           .map(([key, value]) => (
             <View key={key} style={[styles.fact, square ? styles.factSquare : null]}>
               <AppText
-                variant="label"
+                variant="small"
                 color="#B9C0B2"
-                style={square ? styles.factLabelSquare : null}
               >
-                {key.replace(/([A-Z])/g, " $1").toUpperCase()}
+                {factLabels[key] ?? key}
               </AppText>
               <AppText
                 variant={square ? "small" : "body"}
@@ -177,16 +223,22 @@ export function ShareCard({
             </View>
           ))}
       </View>
-      <View style={[styles.footer, square ? styles.footerSquare : null]}>
-        <AppText variant="small" color="#B9C0B2">
+      <View style={styles.footer}>
+        <AppText
+          variant="small"
+          color="#B9C0B2"
+          style={square ? styles.footerTextSquare : null}
+        >
           {sampleJourney
-            ? "Sample journey · Simulated · not your track record"
-            : "Simulated"}
+            ? "Sample journey · Simulated"
+            : "Simulated"}{" "}
+          · Find your next pick
         </AppText>
-        <AppText variant="small" color="#B9C0B2">
-          Find your next pick
-        </AppText>
-        <AppText variant="small" color="#7E887A">
+        <AppText
+          variant="small"
+          color="#7E887A"
+          style={square ? styles.footerTextSquare : null}
+        >
           {snapshot.finePrint}
         </AppText>
       </View>
@@ -200,12 +252,12 @@ export function shareThemeColors(theme: ShareTheme) {
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
-    gap: 10,
+    padding: 14,
+    gap: 8,
   },
   cardSquare: {
-    padding: 10,
-    gap: 4,
+    padding: 12,
+    gap: 6,
   },
   topRow: {
     flexDirection: "row",
@@ -242,28 +294,19 @@ const styles = StyleSheet.create({
     fontSize: 30,
     lineHeight: 34,
   },
-  heroTitleSquare: { fontSize: 16, lineHeight: 20 },
-  heroBodySquare: { fontSize: 12, lineHeight: 16 },
-  heroBasisSquare: { fontSize: 10, lineHeight: 14 },
+  heroTitleSquare: { fontSize: 15, lineHeight: 18 },
+  heroBodySquare: { fontSize: 11, lineHeight: 14 },
+  heroBasisSquare: { fontSize: 9, lineHeight: 12 },
   chart: {
-    height: 84,
     borderBottomWidth: 1,
     borderBottomColor: "#65705C",
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 2,
-    paddingHorizontal: 4,
+    justifyContent: "center",
   },
-  chartSquare: {
-    height: 24,
-  },
-  chartBar: { flex: 1, minWidth: 2, borderRadius: 2 },
-  facts: { gap: 10 },
-  factsSquare: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  fact: { gap: 3 },
+  facts: { flexDirection: "row", flexWrap: "wrap", rowGap: 8, columnGap: 8 },
+  factsSquare: { rowGap: 5 },
+  fact: { width: "47%", gap: 2 },
   factSquare: { width: "48%", gap: 1 },
-  factLabelSquare: { fontSize: 9, lineHeight: 12 },
-  factValueSquare: { fontSize: 12, lineHeight: 16 },
-  footer: { marginTop: "auto", gap: 5 },
-  footerSquare: { gap: 2 },
+  factValueSquare: { fontSize: 10, lineHeight: 13 },
+  footer: { marginTop: "auto", gap: 3 },
+  footerTextSquare: { fontSize: 9, lineHeight: 12 },
 });

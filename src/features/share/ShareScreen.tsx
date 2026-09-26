@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Image as NativeImage,
+  PixelRatio,
   StyleSheet,
   View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
-import * as MediaLibrary from "expo-media-library";
+import * as MediaLibrary from "expo-media-library/legacy";
 import * as Sharing from "expo-sharing";
 import { captureRef } from "react-native-view-shot";
 import type { ShareSnapshot } from "@/domain/types";
@@ -19,7 +20,16 @@ import {
 import { MIN_HISTORY_DAY } from "@/domain/time";
 import { formatDate } from "@/domain/format";
 import { usePalette } from "@/design/theme";
-import { ActionButton, AppText, Chip, InlineNotice, Page, Panel, SectionTitle } from "@/components/ui";
+import {
+  ActionButton,
+  AppText,
+  Chip,
+  InlineNotice,
+  Page,
+  Panel,
+  ScreenHeader,
+  SectionTitle,
+} from "@/components/ui";
 import {
   SHARE_CARD_DESIGN_SIZES,
   ShareCard,
@@ -151,9 +161,11 @@ export function ShareScreen() {
   if (!snapshot) {
     return (
       <Page>
-        <ActionButton variant="quiet" accessibilityLabel="Close share composer" onPress={() => router.back()}>
-          ← Back
-        </ActionButton>
+        <ScreenHeader
+          title="Share result"
+          backLabel="Close share composer"
+          onBack={() => router.back()}
+        />
         <Panel>
           <AppText variant="title">This result is not ready to share.</AppText>
           <AppText variant="body" color={palette.textSecondary}>
@@ -222,8 +234,8 @@ export function ShareScreen() {
       format: "png",
       quality: 1,
       result: "tmpfile",
-      width: size.width,
-      height: size.height,
+      width: size.width / PixelRatio.get(),
+      height: size.height / PixelRatio.get(),
     });
     const dimensions = await NativeImage.getSize(uri);
     if (dimensions.width !== size.width || dimensions.height !== size.height) {
@@ -242,18 +254,12 @@ export function ShareScreen() {
 
   return (
     <Page contentStyle={styles.page}>
-      <View style={styles.header}>
-        <ActionButton
-          variant="quiet"
-          accessibilityLabel="Close share composer"
-          onPress={() => router.back()}
-        >
-          ← Back
-        </ActionButton>
-        <AppText variant="label" color={palette.textMuted}>
-          SHARE PREVIEW
-        </AppText>
-      </View>
+      <ScreenHeader
+        title="Share result"
+        eyebrow="SHARE PREVIEW"
+        backLabel="Close share composer"
+        onBack={() => router.back()}
+      />
       <Panel style={styles.previewPanel}>
         <View
           style={[
@@ -380,11 +386,6 @@ function makeCaption(snapshot: ShareSnapshot): string {
 
 const styles = StyleSheet.create({
   page: { paddingBottom: 130 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
   previewPanel: { gap: 10 },
   previewFrame: { width: "100%", overflow: "hidden", borderRadius: 20 },
   previewCard: { alignSelf: "center" },
