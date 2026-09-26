@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Pressable,
   PressableProps,
-  PixelRatio,
   ScrollView,
   StyleProp,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
   TextProps,
   TextStyle,
   View,
+  useWindowDimensions,
   ViewProps,
   ViewStyle,
 } from "react-native";
@@ -239,6 +239,10 @@ export function ActionButton({
   );
 }
 
+export function useLargeText(): boolean {
+  return useWindowDimensions().fontScale > 1.35;
+}
+
 export function Chip({
   label,
   accessibilityLabel,
@@ -255,15 +259,13 @@ export function Chip({
   style?: StyleProp<ViewStyle>;
 }) {
   const palette = usePalette();
-  const fontScale = PixelRatio.getFontScale();
-  const largeText = fontScale > 1.35;
-  const largeMinWidth = 26 + label.length * 6.5 * fontScale;
+  const largeText = useLargeText();
   const content = (
     <AppText
       variant="small"
       numberOfLines={largeText ? 2 : undefined}
       color={selected ? palette.background : palette.textSecondary}
-      style={[styles.chipText, largeText && styles.chipTextLarge]}
+      style={styles.chipText}
     >
       {label}
     </AppText>
@@ -274,7 +276,7 @@ export function Chip({
       <View
         style={[
           styles.chip,
-          largeText && { minWidth: largeMinWidth },
+          largeText && styles.chipLarge,
           { backgroundColor: background },
           style,
         ]}
@@ -293,7 +295,7 @@ export function Chip({
       hitSlop={5}
       style={({ pressed }) => [
         styles.chip,
-        largeText && { minWidth: largeMinWidth },
+        largeText && styles.chipLarge,
         { backgroundColor: background, opacity: pressed ? 0.75 : 1 },
         style,
       ]}
@@ -491,7 +493,7 @@ export function ScreenHeader({
   showDemo?: boolean;
 }) {
   const palette = usePalette();
-  const largeText = PixelRatio.getFontScale() > 1.35;
+  const largeText = useLargeText();
   if (onBack) {
     return (
       <View style={styles.navBar}>
@@ -876,8 +878,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
   },
-  chipText: { flexShrink: 0 },
-  chipTextLarge: { flexShrink: 1, textAlign: "center" },
+  chipLarge: { maxWidth: "100%" },
+  chipText: {
+    flexShrink: 1,
+    textAlign: "center",
+    textAlignVertical: "center",
+  },
   notice: {
     paddingHorizontal: 16,
     paddingVertical: 14,

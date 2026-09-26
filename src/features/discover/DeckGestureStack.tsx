@@ -194,7 +194,11 @@ export function DeckGestureStack({
           ]}
         >
           <View style={[styles.peekIcon, { backgroundColor: next.asset.iconColor }]}>
-            <AppText variant="label" color="#10130D">
+            <AppText
+              variant="label"
+              color="#10130D"
+              maxFontSizeMultiplier={1}
+            >
               {next.asset.iconInitials}
             </AppText>
           </View>

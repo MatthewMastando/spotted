@@ -266,7 +266,11 @@ export function AssetDetailsScreen() {
       <View style={styles.hero}>
         <View style={styles.identity}>
           <View style={[styles.icon, { backgroundColor: asset.iconColor }]}>
-            <AppText variant="headline" color="#10130D">
+            <AppText
+              variant="headline"
+              color="#10130D"
+              maxFontSizeMultiplier={1}
+            >
               {asset.iconInitials}
             </AppText>
           </View>
@@ -552,7 +556,11 @@ function RelatedAssets({
             style={[styles.relatedRow, { borderTopColor: palette.separator }]}
           >
             <View style={[styles.relatedIcon, { backgroundColor: item.iconColor }]}>
-              <AppText variant="label" color="#10130D">
+              <AppText
+                variant="label"
+                color="#10130D"
+                maxFontSizeMultiplier={1}
+              >
                 {item.iconInitials}
               </AppText>
             </View>

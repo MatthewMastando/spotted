@@ -123,7 +123,11 @@ export function RecipientScreen() {
       <Panel style={styles.preview}>
         <View style={styles.previewHeader}>
           <View style={[styles.icon, { backgroundColor: asset.iconColor }]}>
-            <AppText variant="label" color="#10130D">
+            <AppText
+              variant="label"
+              color="#10130D"
+              maxFontSizeMultiplier={1}
+            >
               {asset.iconInitials}
             </AppText>
           </View>

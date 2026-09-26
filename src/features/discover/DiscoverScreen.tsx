@@ -3,7 +3,6 @@ import {
   AccessibilityInfo,
   Modal,
   Pressable,
-  PixelRatio,
   ScrollView,
   StyleSheet,
   View,
@@ -28,6 +27,7 @@ import {
   Panel,
   ScreenHeader,
   Segmented,
+  useLargeText,
 } from "@/components/ui";
 import type { AssetCardData } from "./AssetCard";
 import { THEME_LABELS } from "@/domain/themeLabels";
@@ -88,7 +88,7 @@ export function DiscoverScreen() {
   const current = deck.data?.[0] ?? null;
   const next = deck.data?.[1] ?? null;
   const day = settings.clock.dayOffset;
-  const largeText = PixelRatio.getFontScale() > 1.35;
+  const largeText = useLargeText();
   const showSparkline = largeText || deckHeight >= 430;
   const showThesis = largeText || deckHeight >= 350;
 
@@ -720,7 +720,11 @@ function SearchResults({
                 { backgroundColor: asset.iconColor },
               ]}
             >
-              <AppText variant="label" color="#10130D">
+              <AppText
+                variant="label"
+                color="#10130D"
+                maxFontSizeMultiplier={1}
+              >
                 {asset.iconInitials}
               </AppText>
             </View>

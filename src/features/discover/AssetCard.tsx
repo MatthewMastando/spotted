@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Modal,
   Pressable,
-  PixelRatio,
   StyleSheet,
   View,
 } from "react-native";
@@ -35,6 +34,7 @@ import {
   AppText,
   Panel,
   SectionTitle,
+  useLargeText,
 } from "@/components/ui";
 
 type Metric = {
@@ -75,7 +75,7 @@ export function AssetCard({
 }) {
   const palette = usePalette();
   const reducedMotion = useReducedMotion();
-  const largeText = PixelRatio.getFontScale() > 1.35;
+  const largeText = useLargeText();
   const [selectedMetric, setSelectedMetric] = useState<Metric | null>(null);
   const attention = socialAttention(data.social);
   const metrics = getMetrics(asset, data.displayPrice);
@@ -125,7 +125,11 @@ export function AssetCard({
                   { backgroundColor: asset.iconColor },
                 ]}
               >
-                <AppText variant="label" color="#10130D">
+                <AppText
+                  variant="label"
+                  color="#10130D"
+                  maxFontSizeMultiplier={1}
+                >
                   {asset.iconInitials}
                 </AppText>
               </View>

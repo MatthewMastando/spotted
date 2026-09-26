@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   Modal,
-  PixelRatio,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -27,6 +26,7 @@ import {
   Page,
   Segmented,
   ScreenHeader,
+  useLargeText,
 } from "@/components/ui";
 import { TYPE_LABELS } from "@/features/common/labels";
 import { useContainer } from "@/services/ContainerContext";
@@ -77,7 +77,7 @@ export function SavedScreen() {
   const container = useContainer();
   const router = useRouter();
   const palette = usePalette();
-  const largeText = PixelRatio.getFontScale() > 1.35;
+  const largeText = useLargeText();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const settings = useSettings() ?? container.getSettings();
@@ -463,7 +463,7 @@ function SavedRowCard({
   onMenu: () => void;
 }) {
   const palette = usePalette();
-  const largeText = PixelRatio.getFontScale() > 1.35;
+  const largeText = useLargeText();
   const typeLabel = TYPE_LABELS[row.asset.type];
   const returnColor =
     row.returnValue === null
@@ -548,7 +548,11 @@ function SavedRowCard({
             </Pressable>
           ) : null}
           <View style={[styles.icon, { backgroundColor: row.asset.iconColor }]}>
-            <AppText variant="label" color="#10130D">
+            <AppText
+              variant="label"
+              color="#10130D"
+              maxFontSizeMultiplier={1}
+            >
               {row.asset.iconInitials}
             </AppText>
           </View>
