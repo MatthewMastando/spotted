@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type { AssetFixture, PricePoint, SocialSnapshot } from "@/domain/types";
 import { MIN_HISTORY_DAY } from "@/domain/time";
@@ -25,11 +26,14 @@ import {
   ActionButton,
   AppText,
   Chip,
+  IconButton,
   InlineNotice,
   Page,
   Panel,
   ScreenHeader,
+  Section,
   SectionTitle,
+  Segmented,
 } from "@/components/ui";
 import { TYPE_LABELS, THEME_LABELS, quoteAsOfLabel } from "@/features/common/labels";
 import { useContainer } from "@/services/ContainerContext";
@@ -116,8 +120,7 @@ export function AssetDetailsScreen() {
     return (
       <Page>
         <ScreenHeader
-          title="Asset details"
-          eyebrow="MOCK DATA"
+          title={asset?.ticker ?? "Asset"}
           onBack={() => router.back()}
         />
         <Panel>
@@ -125,6 +128,12 @@ export function AssetDetailsScreen() {
           <AppText variant="body" color={palette.textSecondary}>
             This demo asset is no longer available in the current market history.
           </AppText>
+          <ActionButton
+            variant="secondary"
+            onPress={() => router.replace("/(tabs)")}
+          >
+            Back to Discover
+          </ActionButton>
         </Panel>
       </Page>
     );
@@ -140,12 +149,17 @@ export function AssetDetailsScreen() {
     setPending(true);
     setMessage(null);
     try {
-      await runMutation(container, () =>
+      const result = await runMutation(container, () =>
         container.savedIdeas.save(selectedAsset.id, createId("details-save")),
       );
       await trackEvent(container, "idea_saved", { asset_id: selectedAsset.id });
       await successHaptic(container);
-      setMessage(`${selectedAsset.ticker} is now tracking from ${formatPrice(currentPrice)}.`);
+      const { savedIdea } = result;
+      setMessage(
+        result.disposition === "restored"
+          ? `${selectedAsset.ticker} is back in Saved, still tracking from ${formatPrice(savedIdea.savedPrice)} since ${formatDate(savedIdea.savedAt)}.`
+          : `${selectedAsset.ticker} is now tracking from ${formatPrice(savedIdea.savedPrice)}.`,
+      );
     } catch (reason) {
       setMessage(
         reason instanceof Error ? reason.message : "Unable to save this idea.",
@@ -189,96 +203,101 @@ export function AssetDetailsScreen() {
   }
 
   return (
-    <Page>
+    <Page
+      footer={
+        <>
+          <View style={styles.actions}>
+            <ActionButton
+              variant={activeIdea ? "secondary" : "primary"}
+              loading={pending}
+              disabled={pending || Boolean(activeIdea) || !canSave}
+              accessibilityLabel={activeIdea ? `${asset.ticker} is saved` : `Save ${asset.ticker}`}
+              accessibilityHint={
+                canSave
+                  ? "Track the current mock price as the idea baseline"
+                  : "Saving is unavailable because this asset has no price"
+              }
+              onPress={() => void saveIdea()}
+              style={styles.action}
+            >
+              {activeIdea ? "Saved" : "Save idea"}
+            </ActionButton>
+            <ActionButton
+              variant={activeIdea ? "primary" : "secondary"}
+              disabled={pending || !canSave}
+              accessibilityLabel={`Allocate ${asset.ticker}`}
+              accessibilityHint={
+                activeIdea
+                  ? "Choose a paper allocation"
+                  : "Save this idea first, then choose a paper allocation"
+              }
+              onPress={() => void allocate()}
+              style={styles.action}
+            >
+              Allocate
+            </ActionButton>
+          </View>
+          {message ? (
+            <AppText variant="small" color={palette.textSecondary}>
+              {message}
+            </AppText>
+          ) : null}
+        </>
+      }
+    >
       <ScreenHeader
-        title="Asset details"
-        eyebrow="MOCK DATA"
+        title={asset.ticker}
         onBack={() => router.back()}
+        right={
+          <IconButton
+            icon="export-variant"
+            disabled={pending || !hasShareableResult}
+            accessibilityLabel={`Share ${asset.ticker} result`}
+            accessibilityHint={
+              hasShareableResult
+                ? "Open the snapshot-backed share composer"
+                : "Save or allocate this idea before sharing a result"
+            }
+            onPress={share}
+          />
+        }
       />
 
-      <View style={styles.identity}>
-        <View style={[styles.icon, { backgroundColor: asset.iconColor }]}>
-          <AppText variant="title" color="#10130D">
-            {asset.iconInitials}
-          </AppText>
-        </View>
-        <View style={styles.identityCopy}>
-          <AppText variant="display">{asset.name}</AppText>
-          <AppText variant="body" color={palette.textSecondary}>
-            {asset.ticker} · {TYPE_LABELS[asset.type]} · {asset.sector}
-          </AppText>
-          <View style={styles.themeRow}>
-            {asset.themes.map((theme) => (
-              <Chip key={theme} label={THEME_LABELS[theme]} />
-            ))}
+      <View style={styles.hero}>
+        <View style={styles.identity}>
+          <View style={[styles.icon, { backgroundColor: asset.iconColor }]}>
+            <AppText
+              variant="headline"
+              color="#10130D"
+              maxFontSizeMultiplier={1}
+            >
+              {asset.iconInitials}
+            </AppText>
+          </View>
+          <View style={styles.identityCopy}>
+            <AppText variant="title">{asset.name}</AppText>
+            <AppText variant="small" color={palette.textSecondary}>
+              {asset.ticker} · {TYPE_LABELS[asset.type]} · {asset.sector}
+            </AppText>
           </View>
         </View>
+        <View style={styles.priceCopy}>
+          <AppText variant="hero">
+            {currentPrice ? formatPrice(currentPrice) : "Price unavailable"}
+          </AppText>
+          <AppText variant="caption" color={palette.textMuted}>
+            USD · {quoteAsOfLabel(quote)} · Mock data
+          </AppText>
+        </View>
+        {activeIdea || holding ? (
+          <View style={styles.themeRow}>
+            {activeIdea ? <Chip label="Saved" /> : null}
+            {holding ? <Chip label="Paper position" /> : null}
+          </View>
+        ) : null}
       </View>
 
-      <Panel style={styles.pricePanel}>
-        <View style={styles.priceHeader}>
-          <View style={styles.priceCopy}>
-            <AppText variant="display">
-              {currentPrice ? formatPrice(currentPrice) : "Price unavailable"}
-            </AppText>
-            <AppText variant="small" color={palette.textSecondary}>
-              USD · {quoteAsOfLabel(quote)}
-            </AppText>
-          </View>
-          {activeIdea ? <Chip label="Saved" selected /> : null}
-          {holding ? <Chip label="Paper position" selected /> : null}
-        </View>
-        <AppText variant="body">{asset.description}</AppText>
-        <AppText variant="body" color={palette.accent}>
-          {asset.thesis}
-        </AppText>
-        <AppText variant="small" color={palette.textMuted}>
-          Mock data · as of {formatDate(quote.quoteTime)}
-        </AppText>
-      </Panel>
-
-      <Panel style={styles.chartPanel}>
-        <SectionTitle title="Price history" />
-        <View
-          accessibilityRole="tablist"
-          accessibilityLabel="Price chart range"
-          style={styles.rangeRow}
-        >
-          {RANGES.map((range) => (
-            <Pressable
-              key={range.label}
-              accessibilityRole="tab"
-              accessibilityLabel={`${range.label} chart range`}
-              accessibilityState={{
-                selected: selectedRange === range.label,
-                disabled: !availability[range.label],
-              }}
-              disabled={!availability[range.label]}
-              onPress={() => setSelectedRange(range.label)}
-              style={[
-                styles.rangeButton,
-                {
-                  backgroundColor:
-                    selectedRange === range.label
-                      ? palette.accent
-                      : palette.surfaceRaised,
-                  opacity: availability[range.label] ? 1 : 0.4,
-                },
-              ]}
-            >
-              <AppText
-                variant="label"
-                color={
-                  selectedRange === range.label
-                    ? palette.background
-                    : palette.text
-                }
-              >
-                {range.label}
-              </AppText>
-            </Pressable>
-          ))}
-        </View>
+      <View style={styles.chartBlock}>
         {selectedHistory.length >= 2 ? (
           <EquityChart
             values={selectedHistory.map((point) => point.price)}
@@ -290,7 +309,31 @@ export function AssetDetailsScreen() {
             Price history is unavailable for this range.
           </AppText>
         )}
-      </Panel>
+        <Segmented
+          accessibilityLabel="Price chart range"
+          options={RANGES.map((range) => ({
+            value: range.label,
+            label: range.label,
+            accessibilityLabel: `${range.label} chart range`,
+            disabled: !availability[range.label],
+          }))}
+          value={selectedRange}
+          onChange={setSelectedRange}
+        />
+      </View>
+
+      <Section title="About">
+        <AppText variant="body" color={palette.textSecondary}>
+          {asset.description}
+        </AppText>
+        <AppText variant="body">{asset.thesis}</AppText>
+      </Section>
+
+      <Section title="Risk">
+        <AppText variant="body" color={palette.textSecondary}>
+          {asset.risk}
+        </AppText>
+      </Section>
 
       <DetailsFacts
         asset={asset}
@@ -308,51 +351,6 @@ export function AssetDetailsScreen() {
         }
       />
 
-      <View style={styles.actions}>
-        <ActionButton
-          variant={activeIdea ? "secondary" : "primary"}
-          loading={pending}
-          disabled={pending || Boolean(activeIdea) || !canSave}
-          accessibilityLabel={activeIdea ? `${asset.ticker} is saved` : `Save ${asset.ticker}`}
-          accessibilityHint={
-            canSave
-              ? "Track the current mock price as the idea baseline"
-              : "Saving is unavailable because this asset has no price"
-          }
-          onPress={() => void saveIdea()}
-          style={styles.action}
-        >
-          {activeIdea ? "Saved" : "Save idea"}
-        </ActionButton>
-        <ActionButton
-          variant="secondary"
-          disabled={pending || !canSave}
-          accessibilityLabel={`Allocate ${asset.ticker}`}
-          accessibilityHint={
-            activeIdea
-              ? "Choose a paper allocation"
-              : "Save this idea first, then choose a paper allocation"
-          }
-          onPress={() => void allocate()}
-          style={styles.action}
-        >
-          Allocate
-        </ActionButton>
-        <ActionButton
-          variant="quiet"
-          disabled={pending || !hasShareableResult}
-          accessibilityLabel={`Share ${asset.ticker} result`}
-          accessibilityHint={
-            hasShareableResult
-              ? "Open the snapshot-backed share composer"
-              : "Save or allocate this idea before sharing a result"
-          }
-          onPress={share}
-          style={styles.action}
-        >
-          Share
-        </ActionButton>
-      </View>
       {!canSave ? (
         <InlineNotice>
           Price unavailable. Save and new paper fills will unlock when a quote exists.
@@ -363,7 +361,9 @@ export function AssetDetailsScreen() {
           This idea is archived. Saving it again restores the original tracking baseline.
         </InlineNotice>
       ) : null}
-      {message ? <InlineNotice>{message}</InlineNotice> : null}
+      <AppText variant="caption" color={palette.textMuted}>
+        Mock data · as of {formatDate(quote.quoteTime)} · Not investment advice.
+      </AppText>
     </Page>
   );
 }
@@ -377,14 +377,15 @@ function DetailsFacts({
   currentPrice: string | null;
   history: PricePoint[];
 }) {
+  const palette = usePalette();
   const metrics = asset.metrics;
   if (metrics.kind === "stock") {
     const derived = currentPrice
       ? deriveStockMetrics(currentPrice, metrics)
       : { marketCap: null, priceToEarnings: null };
     return (
-      <Panel style={styles.sectionPanel}>
-        <SectionTitle title="Stock context" />
+      <Section>
+        <SectionTitle title="Financials" />
         <FactRow label="Revenue" value={formatMoney(metrics.revenueTtm)} />
         <FactRow label="Earnings" value={formatMoney(metrics.netIncomeTtm)} />
         <FactRow label="Gross margin" value={formatRate(metrics.grossMargin)} />
@@ -401,13 +402,13 @@ function DetailsFacts({
           label="Industry peers"
           value={metrics.peers.length ? metrics.peers.join(", ") : "Unavailable"}
         />
-      </Panel>
+      </Section>
     );
   }
   if (metrics.kind === "etf") {
     return (
-      <Panel style={styles.sectionPanel}>
-        <SectionTitle title="Fund context" />
+      <Section>
+        <SectionTitle title="Fund" />
         <FactRow label="Objective" value={metrics.objective} />
         <FactRow label="Assets under management" value={formatMoney(metrics.aum)} />
         <FactRow label="Expense ratio" value={formatRate(metrics.expenseRatio)} />
@@ -420,7 +421,7 @@ function DetailsFacts({
           value={formatRate(metrics.top10Concentration)}
         />
         <View style={styles.subsection}>
-          <AppText variant="label">TOP HOLDINGS</AppText>
+          <AppText variant="caption" color={palette.textMuted}>Top holdings</AppText>
           {metrics.holdings.length ? (
             metrics.holdings.map((holding) => (
               <FactRow
@@ -434,7 +435,7 @@ function DetailsFacts({
           )}
         </View>
         <View style={styles.subsection}>
-          <AppText variant="label">EXPOSURES</AppText>
+          <AppText variant="caption" color={palette.textMuted}>Exposures</AppText>
           {metrics.exposures.length ? (
             metrics.exposures.map((exposure) => (
               <FactRow
@@ -448,12 +449,12 @@ function DetailsFacts({
           )}
         </View>
         <FactRow label="Distribution notes" value={metrics.distributionNotes} />
-      </Panel>
+      </Section>
     );
   }
   return (
-    <Panel style={styles.sectionPanel}>
-      <SectionTitle title="Crypto context" />
+    <Section>
+      <SectionTitle title="Network" />
       <FactRow label="Network purpose" value={metrics.networkPurpose} />
       <FactRow label="Supply structure" value={metrics.supplyStructure} />
       <FactRow label="Token risks" value={metrics.tokenRisks} />
@@ -467,7 +468,7 @@ function DetailsFacts({
         label="24h volume / liquidity proxy"
         value={formatCompactMoney(metrics.volume24h)}
       />
-    </Panel>
+    </Section>
   );
 }
 
@@ -481,15 +482,15 @@ function SocialDetails({
   const palette = usePalette();
   const attention = socialAttention(social);
   return (
-    <Panel style={styles.sectionPanel}>
-      <SectionTitle title="Social context" />
+    <Section>
+      <SectionTitle title="Social attention" />
       <AppText variant="small" color={palette.textSecondary}>
         Attention compares the last 24 hours with the daily average over the
         preceding seven days. It is not sentiment and is not a buy signal.
       </AppText>
       <View style={styles.socialSummary}>
         <View style={styles.socialCopy}>
-          <AppText variant="label">ATTENTION</AppText>
+          <AppText variant="caption" color={palette.textMuted}>Attention</AppText>
           <AppText variant="body">{attention.label}</AppText>
         </View>
         {social ? (
@@ -506,7 +507,7 @@ function SocialDetails({
         value={social ? sentimentLabel(social) : "Unavailable"}
       />
       <View style={styles.subsection}>
-        <AppText variant="label">DEMO DISCUSSION SUMMARY</AppText>
+        <AppText variant="caption" color={palette.textMuted}>Demo discussion summary</AppText>
         {social?.discussionThemes.length ? (
           social.discussionThemes.map((theme) => (
             <AppText key={theme} variant="small" color={palette.textSecondary}>
@@ -522,7 +523,7 @@ function SocialDetails({
       <AppText variant="small" color={palette.textMuted}>
         Mock social data · as of {formatDate(social?.asOf ?? null)}
       </AppText>
-    </Panel>
+    </Section>
   );
 }
 
@@ -537,8 +538,8 @@ function RelatedAssets({
   const palette = usePalette();
   const related = container.assets.related(asset.id, 4);
   return (
-    <Panel style={styles.sectionPanel}>
-      <SectionTitle title="Related themes and assets" />
+    <Section>
+      <SectionTitle title="Related" />
       <View style={styles.themeRow}>
         {asset.themes.map((theme) => (
           <Chip key={theme} label={THEME_LABELS[theme]} />
@@ -552,10 +553,14 @@ function RelatedAssets({
             accessibilityLabel={`Open related asset ${item.name}, ${item.ticker}`}
             accessibilityHint="Open details for this related asset"
             onPress={() => onPress(item)}
-            style={[styles.relatedRow, { borderTopColor: palette.border }]}
+            style={[styles.relatedRow, { borderTopColor: palette.separator }]}
           >
             <View style={[styles.relatedIcon, { backgroundColor: item.iconColor }]}>
-              <AppText variant="label" color="#10130D">
+              <AppText
+                variant="label"
+                color="#10130D"
+                maxFontSizeMultiplier={1}
+              >
                 {item.iconInitials}
               </AppText>
             </View>
@@ -565,9 +570,12 @@ function RelatedAssets({
                 {item.ticker} · {TYPE_LABELS[item.type]}
               </AppText>
             </View>
-            <AppText variant="small" color={palette.accent}>
-              View
-            </AppText>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={20}
+              color={palette.textMuted}
+              accessible={false}
+            />
           </Pressable>
         ))
       ) : (
@@ -575,14 +583,14 @@ function RelatedAssets({
           No related fixtures found.
         </AppText>
       )}
-    </Panel>
+    </Section>
   );
 }
 
 function FactRow({ label, value }: { label: string; value: string }) {
   const palette = usePalette();
   return (
-    <View style={styles.factRow}>
+    <View style={[styles.factRow, { borderTopColor: palette.separator }]}>
       <AppText variant="small" color={palette.textSecondary}>
         {label}
       </AppText>
@@ -607,49 +615,35 @@ function makeChartSummary(history: PricePoint[], range: RangeLabel): string {
 }
 
 const styles = StyleSheet.create({
-  identity: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
+  hero: { gap: 20 },
+  identity: { flexDirection: "row", alignItems: "center", gap: 14 },
   icon: {
-    width: 58,
-    minHeight: 58,
-    borderRadius: 18,
+    width: 52,
+    minHeight: 52,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
-  identityCopy: { flex: 1, gap: 5 },
+  identityCopy: { flex: 1, gap: 2 },
   themeRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  pricePanel: { gap: 14 },
-  priceHeader: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  priceCopy: { flex: 1, gap: 4 },
-  chartPanel: { gap: 14 },
-  rangeRow: { flexDirection: "row", gap: 8 },
-  rangeButton: {
-    minHeight: 44,
-    minWidth: 54,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-  },
-  sectionPanel: { gap: 12 },
-  subsection: { gap: 7 },
+  priceCopy: { gap: 4 },
+  chartBlock: { gap: 16 },
+  subsection: { gap: 8, paddingTop: 8 },
   factRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 16,
+    paddingVertical: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   factValue: { flex: 1, textAlign: "right" },
   socialSummary: { flexDirection: "row", alignItems: "center", gap: 14 },
   socialCopy: { flex: 1, gap: 4 },
   relatedRow: {
-    minHeight: 58,
+    minHeight: 60,
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 10,
+    paddingVertical: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
@@ -662,6 +656,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   relatedCopy: { flex: 1, gap: 3 },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  action: { flexGrow: 1, flexBasis: "30%" },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  action: { flexGrow: 1, flexBasis: "40%" },
 });

@@ -11,6 +11,8 @@ const shared = {
     xl: 24,
     xxl: 32,
     xxxl: 48,
+    gutter: 24,
+    section: 40,
   },
   radii: {
     sm: 8,
@@ -40,6 +42,7 @@ export const palettes = {
     textSecondary: "#A5A9B3",
     textMuted: "#737985",
     border: "#2C3039",
+    separator: "#1F2229",
     ...shared,
   },
   light: {
@@ -51,6 +54,7 @@ export const palettes = {
     textSecondary: "#555B51",
     textMuted: "#747B6F",
     border: "#D5D8D0",
+    separator: "#E3E5DF",
     ...shared,
   },
 } as const;

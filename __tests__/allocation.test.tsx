@@ -58,10 +58,10 @@ describe("allocation screen", () => {
     );
     fireEvent.press(screen.getByText("Review allocation"));
     await waitFor(() =>
-      expect(screen.getByText("Confirm allocation")).toBeTruthy(),
+      expect(screen.getByText("Confirm paper allocation")).toBeTruthy(),
     );
 
-    const confirm = screen.getByText("Confirm allocation");
+    const confirm = screen.getByText("Confirm paper allocation");
     fireEvent.press(confirm);
     fireEvent.press(confirm);
 

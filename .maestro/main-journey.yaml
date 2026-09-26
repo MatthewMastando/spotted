@@ -45,7 +45,7 @@ appId: com.swipefolio.app
 - tapOn: "Go back"
 - tapOn:
     id: "tab-portfolio"
-- assertVisible: "Paper P&L"
+- assertVisible: "Paper P&L:.*"
 - scrollUntilVisible:
     element:
       id: "portfolio-share-position"
