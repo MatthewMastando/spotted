@@ -24,6 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    "./plugins/withSceneLifecycle",
     "expo-sqlite",
     "expo-sharing",
     "expo-font",
