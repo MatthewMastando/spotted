@@ -1,10 +1,5 @@
-import { TabPlaceholder } from "@/components/TabPlaceholder";
+import { PortfolioScreen as Portfolio } from "@/features/portfolio/PortfolioScreen";
 
 export default function PortfolioScreen() {
-  return (
-    <TabPlaceholder
-      title="Portfolio"
-      subtitle="Your paper portfolio will appear here."
-    />
-  );
+  return <Portfolio />;
 }

@@ -84,3 +84,11 @@ export function equalSplit(total: string, count: number): string[] {
     return D(cents.toString()).div(100).toFixed(2);
   });
 }
+
+export function suggestedAllocationTotal(cash: string, count: number): string {
+  if (!Number.isInteger(count) || count < 1) return "0.00";
+  const cap = D(1000).mul(count);
+  return D(cash).lt(cap)
+    ? D(cash).toDecimalPlaces(2).toFixed(2)
+    : cap.toFixed(2);
+}

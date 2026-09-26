@@ -15,7 +15,8 @@ export class MockAssetRepository implements AssetRepository {
     return this.assets.filter(
       (asset) =>
         asset.name.toLocaleLowerCase().includes(normalized) ||
-        asset.ticker.toLocaleLowerCase().includes(normalized),
+        asset.ticker.toLocaleLowerCase().includes(normalized) ||
+        asset.themes.some((theme) => theme.replaceAll("_", " ").includes(normalized)),
     );
   }
 

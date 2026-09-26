@@ -24,6 +24,7 @@ export type LedgerResult = {
   cash: string;
   holdings: Holding[];
   realizedPnL: string;
+  realizedByAsset: Record<string, string>;
   equity: string;
   totalPaperPnL: string;
   totalPaperReturn: string;
@@ -41,6 +42,7 @@ export function replayLedger(input: {
   const basisByAsset = new Map<string, ReturnType<typeof D>>();
   const firstBuyByAsset = new Map<string, string>();
   let realizedPnL = D(0);
+  const realizedByAsset = new Map<string, ReturnType<typeof D>>();
   let cash = D(input.portfolio.initialCapital);
 
   for (const transaction of input.transactions) {
@@ -68,7 +70,12 @@ export function replayLedger(input: {
     if (currentUnits.isZero()) continue;
     const closedUnits = DecimalMin(quantity, currentUnits);
     const closedBasis = currentBasis.mul(closedUnits).div(currentUnits);
-    realizedPnL = realizedPnL.plus(amount.minus(closedBasis));
+    const transactionPnL = amount.minus(closedBasis);
+    realizedPnL = realizedPnL.plus(transactionPnL);
+    realizedByAsset.set(
+      transaction.assetId,
+      (realizedByAsset.get(transaction.assetId) ?? D(0)).plus(transactionPnL),
+    );
     const remainingUnits = currentUnits.minus(closedUnits);
     const remainingBasis = currentBasis.minus(closedBasis);
     unitsByAsset.set(transaction.assetId, remainingUnits);
@@ -113,6 +120,12 @@ export function replayLedger(input: {
     cash: toStr(cash),
     holdings,
     realizedPnL: toStr(realizedPnL),
+    realizedByAsset: Object.fromEntries(
+      [...realizedByAsset.entries()].map(([assetId, value]) => [
+        assetId,
+        toStr(value),
+      ]),
+    ),
     equity: toStr(equity),
     totalPaperPnL: toStr(totalPaperPnL),
     totalPaperReturn: toStr(totalPaperPnL.div(input.portfolio.initialCapital)),

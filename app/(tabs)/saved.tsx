@@ -1,10 +1,5 @@
-import { TabPlaceholder } from "@/components/TabPlaceholder";
+import { SavedScreen as Saved } from "@/features/saved/SavedScreen";
 
 export default function SavedScreen() {
-  return (
-    <TabPlaceholder
-      title="Saved"
-      subtitle="Your tracked ideas will appear here."
-    />
-  );
+  return <Saved />;
 }

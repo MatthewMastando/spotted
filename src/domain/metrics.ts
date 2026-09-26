@@ -24,3 +24,15 @@ export function deriveCryptoMarketCap(
     ? null
     : toStr(D(price).mul(metrics.circulatingSupply));
 }
+
+export function annualizedVolatility(prices: string[]): string | null {
+  if (prices.length < 3) return null;
+  const returns = prices
+    .slice(1)
+    .map((price, index) => D(price).div(prices[index]).minus(1).toNumber());
+  const mean = returns.reduce((sum, value) => sum + value, 0) / returns.length;
+  const variance =
+    returns.reduce((sum, value) => sum + (value - mean) ** 2, 0) /
+    (returns.length - 1);
+  return toStr(D(Math.sqrt(Math.max(0, variance * 365))));
+}
