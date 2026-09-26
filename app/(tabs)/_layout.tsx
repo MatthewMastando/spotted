@@ -1,19 +1,20 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { palettes } from "@/design/tokens";
+import { usePalette } from "@/design/theme";
 
 export default function TabLayout() {
+  const palette = usePalette();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: palettes.dark.accent,
-        tabBarInactiveTintColor: palettes.dark.textMuted,
+        tabBarActiveTintColor: palette.accent,
+        tabBarInactiveTintColor: palette.textMuted,
         tabBarStyle: {
-          backgroundColor: palettes.dark.surface,
-          borderTopColor: palettes.dark.border,
+          backgroundColor: palette.surface,
+          borderTopColor: palette.border,
         },
-        sceneStyle: { backgroundColor: palettes.dark.background },
+        sceneStyle: { backgroundColor: palette.background },
       }}
     >
       <Tabs.Screen

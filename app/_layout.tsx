@@ -1,23 +1,51 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Text, View, useColorScheme } from "react-native";
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
 import * as SQLite from "expo-sqlite";
-import { Stack } from "expo-router";
+import { Redirect, Stack, usePathname } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { palettes } from "@/design/tokens";
+import { ThemeProvider, usePalette } from "@/design/theme";
+import { formatDemoDay } from "@/domain/format";
 import { ExpoSqlDb } from "@/persistence/expoDb";
 import { AppContainer, ContainerProvider } from "@/services/ContainerContext";
 import { createContainer } from "@/services/container";
+import { publishSettings, useAppStore } from "@/state/appStore";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFonts } from "expo-font";
+
+void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [container, setContainer] = useState<AppContainer | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const detectedScheme = useColorScheme();
+  const systemScheme =
+    detectedScheme === "light" || detectedScheme === "dark" ? detectedScheme : null;
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+  const settings = useAppStore((state) => state.settings);
 
   useEffect(() => {
     let mounted = true;
     void (async () => {
       const database = await SQLite.openDatabaseAsync("swipefolio.db");
       const appContainer = await createContainer(new ExpoSqlDb(database));
-      if (mounted) setContainer(appContainer);
+      if (mounted) {
+        publishSettings(appContainer.getSettings());
+        setContainer(appContainer);
+      }
     })().catch((reason: unknown) => {
       if (mounted)
         setError(
@@ -30,6 +58,11 @@ export default function RootLayout() {
       mounted = false;
     };
   }, []);
+
+  const ready = Boolean(container && (fontsLoaded || fontError));
+  useEffect(() => {
+    if (ready || error) void SplashScreen.hideAsync();
+  }, [ready, error]);
 
   if (error) {
     return (
@@ -48,7 +81,7 @@ export default function RootLayout() {
       </View>
     );
   }
-  if (!container) {
+  if (!container || (!fontsLoaded && !fontError)) {
     return (
       <View
         style={{
@@ -64,14 +97,107 @@ export default function RootLayout() {
   }
 
   return (
-    <ContainerProvider value={container}>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: palettes.dark.background },
-        }}
+    <ThemeProvider
+      preference={(settings ?? container.getSettings()).themePref}
+      systemScheme={systemScheme}
+    >
+      <AppShell
+        container={container}
+        settings={settings ?? container.getSettings()}
       />
-    </ContainerProvider>
+    </ThemeProvider>
+  );
+}
+
+function AppShell({
+  container,
+  settings,
+}: {
+  container: AppContainer;
+  settings: ReturnType<AppContainer["getSettings"]>;
+}) {
+  const palette = usePalette();
+  return (
+      <SafeAreaProvider>
+        <GestureHandlerRootView
+          style={{ flex: 1, backgroundColor: palette.background }}
+        >
+          <ContainerProvider value={container}>
+            <StatusBar style={palette === palettes.light ? "dark" : "light"} />
+            <RouteTree settings={settings} />
+            <DemoBadge />
+          </ContainerProvider>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+  );
+}
+
+function RouteTree({
+  settings,
+}: {
+  settings: ReturnType<AppContainer["getSettings"]>;
+}) {
+  const pathname = usePathname();
+  const palette = usePalette();
+  if (!settings.onboardingDone && pathname !== "/onboarding")
+    return <Redirect href="/onboarding" />;
+  if (settings.onboardingDone && pathname === "/onboarding")
+    return <Redirect href="/(tabs)" />;
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: palette.background },
+      }}
+    >
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="asset/[id]" />
+      <Stack.Screen name="allocate" options={{ presentation: "modal" }} />
+      <Stack.Screen name="share/[kind]" options={{ presentation: "modal" }} />
+      <Stack.Screen name="settings/index" />
+      <Stack.Screen name="settings/methodology" />
+      <Stack.Screen name="settings/demo" />
+      <Stack.Screen name="r/[assetId]" />
+    </Stack>
+  );
+}
+
+function DemoBadge() {
+  const settings = useAppStore((state) => state.settings);
+  const palette = usePalette();
+  const insets = useSafeAreaInsets();
+  const day = settings?.clock.dayOffset ?? 0;
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        top: insets.top + 4,
+        right: 14,
+        zIndex: 50,
+        paddingHorizontal: 11,
+        paddingVertical: 6,
+        borderRadius: 999,
+        backgroundColor: palette.surfaceRaised,
+        borderColor: palette.border,
+        borderWidth: 1,
+      }}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={formatDemoDay(day)}
+    >
+      <Text
+        allowFontScaling
+        style={{
+          color: palette.textSecondary,
+          fontSize: 10,
+          fontFamily: "Inter_600SemiBold",
+        }}
+      >
+        {formatDemoDay(day)}
+      </Text>
+    </View>
   );
 }

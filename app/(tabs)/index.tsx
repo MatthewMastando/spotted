@@ -1,7 +1,5 @@
-import { TabPlaceholder } from "@/components/TabPlaceholder";
+import { DiscoverScreen as Discover } from "@/features/discover/DiscoverScreen";
 
 export default function DiscoverScreen() {
-  return (
-    <TabPlaceholder title="Discover" subtitle="Find a new idea to follow." />
-  );
+  return <Discover />;
 }
