@@ -27,6 +27,9 @@ export function DeckGestureStack({
   locked,
   reducedMotion,
   canSave,
+  showSparkline,
+  showThesis,
+  clipContent,
   onSwipeStart,
   onSwipeAction,
   onDetails,
@@ -38,6 +41,9 @@ export function DeckGestureStack({
   locked: boolean;
   reducedMotion: boolean;
   canSave: boolean;
+  showSparkline: boolean;
+  showThesis: boolean;
+  clipContent: boolean;
   onSwipeStart: () => void;
   onSwipeAction: (assetId: string, direction: Direction) => void;
   onDetails: () => void;
@@ -209,6 +215,9 @@ export function DeckGestureStack({
             asset={current.asset}
             data={data}
             reason={reason}
+            showSparkline={showSparkline}
+            showThesis={showThesis}
+            clipContent={clipContent}
             onDetails={onDetails}
             interactive={!locked}
             accessibilityActions={[

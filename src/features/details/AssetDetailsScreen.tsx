@@ -14,6 +14,7 @@ import {
   formatMultiple,
   formatNumber,
   formatPercent,
+  formatRate,
   formatPrice,
 } from "@/domain/format";
 import { returnSinceSave } from "@/domain/returns";
@@ -386,10 +387,10 @@ function DetailsFacts({
         <SectionTitle title="Stock context" />
         <FactRow label="Revenue" value={formatMoney(metrics.revenueTtm)} />
         <FactRow label="Earnings" value={formatMoney(metrics.netIncomeTtm)} />
-        <FactRow label="Gross margin" value={formatPercent(metrics.grossMargin)} />
+        <FactRow label="Gross margin" value={formatRate(metrics.grossMargin)} />
         <FactRow
           label="Operating margin"
-          value={formatPercent(metrics.operatingMargin)}
+          value={formatRate(metrics.operatingMargin)}
         />
         <FactRow label="Cash" value={formatMoney(metrics.cash)} />
         <FactRow label="Debt" value={formatMoney(metrics.totalDebt)} />
@@ -409,14 +410,14 @@ function DetailsFacts({
         <SectionTitle title="Fund context" />
         <FactRow label="Objective" value={metrics.objective} />
         <FactRow label="Assets under management" value={formatMoney(metrics.aum)} />
-        <FactRow label="Expense ratio" value={formatPercent(metrics.expenseRatio)} />
+        <FactRow label="Expense ratio" value={formatRate(metrics.expenseRatio)} />
         <FactRow
           label="Distribution yield"
-          value={formatPercent(metrics.distributionYield)}
+          value={formatRate(metrics.distributionYield)}
         />
         <FactRow
           label="Top 10 concentration"
-          value={formatPercent(metrics.top10Concentration)}
+          value={formatRate(metrics.top10Concentration)}
         />
         <View style={styles.subsection}>
           <AppText variant="label">TOP HOLDINGS</AppText>
@@ -425,7 +426,7 @@ function DetailsFacts({
               <FactRow
                 key={holding.name}
                 label={holding.name}
-                value={formatPercent(holding.weight)}
+                value={formatRate(holding.weight)}
               />
             ))
           ) : (
@@ -439,7 +440,7 @@ function DetailsFacts({
               <FactRow
                 key={exposure.label}
                 label={exposure.label}
-                value={formatPercent(exposure.weight)}
+                value={formatRate(exposure.weight)}
               />
             ))
           ) : (
@@ -460,7 +461,7 @@ function DetailsFacts({
       <FactRow label="Maximum supply" value={formatNumber(metrics.maxSupply, 0)} />
       <FactRow
         label="Volatility (annualized demo estimate)"
-        value={formatPercent(annualizedVolatility(history.map((point) => point.price)))}
+        value={formatRate(annualizedVolatility(history.map((point) => point.price)))}
       />
       <FactRow
         label="24h volume / liquidity proxy"

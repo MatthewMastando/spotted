@@ -3,6 +3,7 @@ import {
   Image as NativeImage,
   PixelRatio,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -65,9 +66,24 @@ export function ShareScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const captureTarget = useRef<View>(null);
   const [previewFrameWidth, setPreviewFrameWidth] = useState(0);
+  const { height: windowHeight } = useWindowDimensions();
   const hapticFired = useRef(false);
   const size = SIZES[layout];
   const designSize = SHARE_CARD_DESIGN_SIZES[layout];
+  const availableHeight = Math.min(
+    designSize.height,
+    Math.max(280, windowHeight - 260),
+  );
+  const previewScale = previewFrameWidth
+    ? Math.min(
+        previewFrameWidth / designSize.width,
+        availableHeight / designSize.height,
+      )
+    : 1;
+  const previewCardSize = {
+    width: designSize.width * previewScale,
+    height: designSize.height * previewScale,
+  };
   const day = settings.clock.dayOffset;
 
   const candidateSnapshot = useMemo<ShareSnapshot | null>(() => {
@@ -266,35 +282,39 @@ export function ShareScreen() {
             styles.previewFrame,
             {
               backgroundColor: shareThemeColors(theme).background,
-              aspectRatio: designSize.width / designSize.height,
             },
           ]}
+          onLayout={(event) =>
+            setPreviewFrameWidth(event.nativeEvent.layout.width)
+          }
         >
           <View
-            onLayout={(event) =>
-              setPreviewFrameWidth(event.nativeEvent.layout.width)
-            }
             style={[
-              styles.previewCard,
+              styles.previewCardFrame,
               {
-                width: designSize.width,
-                height: designSize.height,
-                transform: [
-                  {
-                    scale: previewFrameWidth
-                      ? previewFrameWidth / designSize.width
-                      : 1,
-                  },
-                ],
+                width: previewCardSize.width,
+                height: previewCardSize.height,
               },
             ]}
           >
-            <ShareCard
-              snapshot={snapshot}
-              theme={theme}
-              sampleJourney={settings.sampleJourney}
-              layout={layout as ShareCardLayout}
-            />
+            <View
+              style={[
+                styles.previewCard,
+                {
+                  width: designSize.width,
+                  height: designSize.height,
+                  transform: [{ scale: previewScale }],
+                  transformOrigin: "top left",
+                },
+              ]}
+            >
+              <ShareCard
+                snapshot={snapshot}
+                theme={theme}
+                sampleJourney={settings.sampleJourney}
+                layout={layout as ShareCardLayout}
+              />
+            </View>
           </View>
         </View>
         <AppText variant="small" color={palette.textSecondary}>
@@ -387,8 +407,14 @@ function makeCaption(snapshot: ShareSnapshot): string {
 const styles = StyleSheet.create({
   page: { paddingBottom: 130 },
   previewPanel: { gap: 10 },
-  previewFrame: { width: "100%", overflow: "hidden", borderRadius: 20 },
-  previewCard: { alignSelf: "center" },
+  previewFrame: {
+    width: "100%",
+    alignItems: "center",
+    overflow: "hidden",
+    borderRadius: 20,
+  },
+  previewCardFrame: { position: "relative", overflow: "hidden" },
+  previewCard: { position: "absolute", top: 0, left: 0 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   action: { flexGrow: 1, flexBasis: "30%" },

@@ -61,7 +61,7 @@ export function ShareCard({
       ? "#B9C0B2"
       : colors.positive;
   const [chartWidth, setChartWidth] = useState(0);
-  const chartHeight = square ? 44 : 74;
+  const chartHeight = square ? 44 : 128;
   const chartValues = snapshot.chart.map((point) => point.price);
   const chartPath = makePath(chartValues, chartWidth, chartHeight);
   const areaPath = chartPath

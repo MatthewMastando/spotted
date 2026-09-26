@@ -345,6 +345,8 @@ function SavedRowCard({
   onArchive: () => void;
 }) {
   const palette = usePalette();
+  const typeLabel = TYPE_LABELS[row.asset.type];
+  const themeLabel = THEME_LABELS[row.asset.themes[0]];
   const returnColor =
     row.returnValue === null
       ? palette.textSecondary
@@ -384,8 +386,8 @@ function SavedRowCard({
           <View style={styles.identityCopy}>
             <AppText variant="label">{row.asset.name}</AppText>
             <AppText variant="small" color={palette.textSecondary}>
-              {row.asset.ticker} · {TYPE_LABELS[row.asset.type]} ·{" "}
-              {THEME_LABELS[row.asset.themes[0]]}
+              {row.asset.ticker} · {typeLabel}
+              {themeLabel === typeLabel ? "" : ` · ${themeLabel}`}
             </AppText>
           </View>
         </Pressable>

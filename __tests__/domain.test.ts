@@ -8,7 +8,12 @@ import { MockSocialDataProvider } from "@/data/providers/mockSocialDataProvider"
 import { D, toStr } from "@/domain/decimal";
 import { equalSplit, validateAllocations } from "@/domain/allocation";
 import { rankDeck } from "@/domain/deck";
-import { formatMoney, formatPrice, formatShare } from "@/domain/format";
+import {
+  formatMoney,
+  formatPrice,
+  formatRate,
+  formatShare,
+} from "@/domain/format";
 import {
   buildPortfolioHistory,
   LedgerResult,
@@ -247,6 +252,12 @@ describe("domain calculations", () => {
     expect(formatPrice("712340")).toBe("$712,340.00");
     expect(formatPrice("0.00002420")).toBe("$0.0000242");
     expect(formatShare("0.5083")).toBe("50.8%");
+  });
+
+  test("formats rates without adding a positive sign", () => {
+    expect(formatRate("0.0025")).toBe("0.25%");
+    expect(formatRate("1")).toBe("100.00%");
+    expect(formatRate("-0.003", 1)).toBe("-0.3%");
   });
 
   test("equal split distributes remainder cents to the first lines", () => {

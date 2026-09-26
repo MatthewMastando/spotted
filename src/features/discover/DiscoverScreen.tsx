@@ -67,6 +67,7 @@ export function DiscoverScreen() {
   const [toast, setToast] = useState<string | null>(null);
   const [undoAvailable, setUndoAvailable] = useState(false);
   const [ctaDismissed, setCtaDismissed] = useState(false);
+  const [deckHeight, setDeckHeight] = useState(0);
   const [passedIds, setPassedIds] = useState<string[]>([]);
   const pendingRef = useRef(false);
   const gestureCommitRef = useRef(false);
@@ -84,6 +85,8 @@ export function DiscoverScreen() {
   const next = deck.data?.[1] ?? null;
   const day = settings.clock.dayOffset;
   const largeText = PixelRatio.getFontScale() > 1.35;
+  const showSparkline = largeText || deckHeight >= 430;
+  const showThesis = largeText || deckHeight >= 350;
 
   const currentData = useMemo<AssetCardData | null>(() => {
     if (!current) return null;
@@ -291,6 +294,7 @@ export function DiscoverScreen() {
     >
       <ScreenHeader
         title="Discover"
+        demoInline
         right={
           <View style={styles.headerActions}>
             <ActionButton
@@ -422,7 +426,11 @@ export function DiscoverScreen() {
 
           {activeIdeas.data && activeIdeas.data.length >= 3 && !ctaDismissed ? (
             <View style={[styles.allocationCta, { borderColor: palette.border }]}>
-              <AppText variant="small" style={styles.ctaText}>
+              <AppText
+                variant="small"
+                numberOfLines={1}
+                style={styles.ctaText}
+              >
                 Build my paper portfolio
               </AppText>
               <Pressable
@@ -457,7 +465,16 @@ export function DiscoverScreen() {
             </View>
           ) : null}
 
-          <View style={[styles.deckArea, !largeText && styles.deckAreaFill]}>
+          <View
+            onLayout={(event) =>
+              setDeckHeight(event.nativeEvent.layout.height)
+            }
+            style={[
+              styles.deckArea,
+              largeText ? styles.deckAreaLarge : styles.deckAreaFill,
+              { overflow: largeText ? "visible" : "hidden" },
+            ]}
+          >
             {deck.error ? (
               <InlineNotice>{deck.error.message}</InlineNotice>
             ) : null}
@@ -476,6 +493,9 @@ export function DiscoverScreen() {
                 locked={pending}
                 reducedMotion={reducedMotion}
                 canSave={currentData.displayPrice !== null}
+                showSparkline={showSparkline}
+                showThesis={showThesis}
+                clipContent={!largeText}
                 onSwipeStart={beginGestureAction}
                 onSwipeAction={(assetId, direction) =>
                   void performAction(direction, assetId, true)
@@ -682,22 +702,23 @@ const styles = StyleSheet.create({
   filterRow: { gap: 8, alignItems: "center", paddingVertical: 2 },
   filterDivider: { width: 1, height: 24, marginHorizontal: 3 },
   allocationCta: {
-    minHeight: 48,
+    minHeight: 38,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 14,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 4,
   },
   ctaText: { flex: 1 },
   ctaButton: {
-    minHeight: 44,
+    minHeight: 36,
     justifyContent: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
   },
   deckArea: { minHeight: 280 },
   deckAreaFill: { flex: 1, minHeight: 0 },
+  deckAreaLarge: { minHeight: 640 },
   actionRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   actionButton: { flex: 1, minHeight: 52 },
   undoButton: {

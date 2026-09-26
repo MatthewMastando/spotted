@@ -22,6 +22,7 @@ import {
   formatNumber,
   formatPercent,
   formatPrice,
+  formatRate,
 } from "@/domain/format";
 import { returnSinceSave } from "@/domain/returns";
 import { socialAttention } from "@/domain/social";
@@ -55,6 +56,9 @@ export function AssetCard({
   data,
   reason,
   interactive = true,
+  showSparkline = true,
+  showThesis = true,
+  clipContent = true,
   onDetails,
   accessibilityActions,
   onAccessibilityAction,
@@ -63,6 +67,9 @@ export function AssetCard({
   data: AssetCardData;
   reason: string;
   interactive?: boolean;
+  showSparkline?: boolean;
+  showThesis?: boolean;
+  clipContent?: boolean;
   onDetails: () => void;
   accessibilityActions?: { name: string; label: string }[];
   onAccessibilityAction?: (name: string) => void;
@@ -102,7 +109,12 @@ export function AssetCard({
         disabled={!interactive}
         style={styles.cardPressable}
       >
-        <Panel style={styles.card}>
+        <Panel
+          style={[
+            styles.card,
+            !clipContent ? styles.cardUnclipped : null,
+          ]}
+        >
           <AppText variant="small" color={palette.accent} numberOfLines={1}>
             {reason}
           </AppText>
@@ -154,13 +166,15 @@ export function AssetCard({
             >
               {asset.description}
             </AppText>
-            <AppText
-              variant="small"
-              color={palette.accent}
-              numberOfLines={largeText ? undefined : 2}
-            >
-              {asset.thesis}
-            </AppText>
+            {showThesis ? (
+              <AppText
+                variant="small"
+                color={palette.accent}
+                numberOfLines={largeText ? undefined : 2}
+              >
+                {asset.thesis}
+              </AppText>
+            ) : null}
           </View>
 
           <View style={styles.metrics}>
@@ -177,7 +191,11 @@ export function AssetCard({
                   { backgroundColor: palette.surfaceRaised },
                 ]}
               >
-                <AppText variant="label" color={palette.textMuted}>
+                <AppText
+                  variant="label"
+                  color={palette.textMuted}
+                  numberOfLines={1}
+                >
                   {metric.label}
                 </AppText>
                 <AppText variant="number">{metric.value}</AppText>
@@ -197,21 +215,25 @@ export function AssetCard({
                 {attention.label}
               </AppText>
             </View>
-            {data.social ? (
-              <Sparkline
-                values={data.social.history.map((point) => String(point.count))}
-                color={palette.accent}
-                height={28}
-                label={`30-day social attention history for ${asset.ticker}`}
-              />
-            ) : (
-              <AppText variant="small" color={palette.textMuted}>
-                No history
-              </AppText>
-            )}
-            <AppText variant="small" color={palette.textMuted}>
-              Mentions, last 30 days
-            </AppText>
+            {showSparkline ? (
+              <>
+                {data.social ? (
+                  <Sparkline
+                    values={data.social.history.map((point) => String(point.count))}
+                    color={palette.accent}
+                    height={20}
+                    label={`30-day social attention history for ${asset.ticker}`}
+                  />
+                ) : (
+                  <AppText variant="small" color={palette.textMuted}>
+                    No history
+                  </AppText>
+                )}
+                <AppText variant="small" color={palette.textMuted}>
+                  Mentions, last 30 days
+                </AppText>
+              </>
+            ) : null}
           </View>
 
           <View style={[styles.risk, { borderTopColor: palette.border }]}>
@@ -221,7 +243,7 @@ export function AssetCard({
             <AppText
               variant="small"
               color={palette.textSecondary}
-              numberOfLines={largeText ? undefined : 2}
+              numberOfLines={1}
               style={styles.riskCopy}
             >
               {asset.risk}
@@ -296,19 +318,19 @@ function getMetrics(
     return [
       {
         label: "Expense ratio",
-        value: formatPercent(asset.metrics.expenseRatio),
+        value: formatRate(asset.metrics.expenseRatio),
         definition:
           "Synthetic annual fund operating expenses as a percentage of assets.",
       },
       {
         label: "Distribution yield",
-        value: formatPercent(asset.metrics.distributionYield),
+        value: formatRate(asset.metrics.distributionYield),
         definition:
           "Synthetic trailing distribution rate. Distributions are not included in simulated returns.",
       },
       {
         label: "Top 10",
-        value: formatPercent(asset.metrics.top10Concentration),
+        value: formatRate(asset.metrics.top10Concentration),
         definition:
           "Synthetic share of the fund represented by its ten largest holdings.",
       },
@@ -344,9 +366,11 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     justifyContent: "space-between",
-    gap: 4,
-    padding: 10,
+    gap: 2,
+    padding: 8,
+    overflow: "hidden",
   },
+  cardUnclipped: { overflow: "visible" },
   identityRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -369,20 +393,20 @@ const styles = StyleSheet.create({
   priceCopy: { flex: 1, gap: 4 },
   price: { fontSize: 26, lineHeight: 32 },
   dailyChange: { alignItems: "flex-end", gap: 4 },
-  copyBlock: { gap: 4 },
-  metrics: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  copyBlock: { gap: 2 },
+  metrics: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
   metric: {
     flexGrow: 1,
     flexBasis: "30%",
     minWidth: 92,
-    minHeight: 54,
-    borderRadius: 14,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    minHeight: 48,
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
     justifyContent: "space-between",
     gap: 3,
   },
-  socialBlock: { gap: 2 },
+  socialBlock: { gap: 1 },
   socialHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -392,9 +416,9 @@ const styles = StyleSheet.create({
   attentionLabel: { flexShrink: 1, textAlign: "right" },
   risk: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 6,
+    paddingTop: 4,
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 8,
   },
   riskCopy: { flex: 1 },

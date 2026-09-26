@@ -335,6 +335,7 @@ export function ScreenHeader({
   right,
   backLabel = "Go back",
   showDemo = true,
+  demoInline = false,
 }: {
   title: string;
   eyebrow?: string;
@@ -343,6 +344,7 @@ export function ScreenHeader({
   right?: ReactNode;
   backLabel?: string;
   showDemo?: boolean;
+  demoInline?: boolean;
 }) {
   const palette = usePalette();
   const day = useAppStore((state) => state.settings?.clock.dayOffset ?? 0);
@@ -359,35 +361,70 @@ export function ScreenHeader({
           ←
         </ActionButton>
       ) : null}
-      <View style={styles.screenHeaderCopy}>
-        {eyebrow ? (
-          <AppText variant="label" color={palette.accent}>
-            {eyebrow}
-          </AppText>
-        ) : null}
-        <AppText variant="display">{title}</AppText>
-        {showDemo ? (
-          <View
-            accessible
-            accessibilityRole="text"
-            accessibilityLabel={formatDemoDay(day)}
-            style={[
-              styles.demoBadge,
-              { backgroundColor: palette.surfaceRaised, borderColor: palette.border },
-            ]}
-          >
-            <AppText variant="label" color={palette.textSecondary}>
-              {formatDemoDay(day)}
+      <View style={styles.screenHeaderMain}>
+        <View style={styles.screenHeaderCopy}>
+          {eyebrow ? (
+            <AppText variant="label" color={palette.accent}>
+              {eyebrow}
             </AppText>
-          </View>
-        ) : null}
-        {subtitle ? (
-          <AppText variant="body" color={palette.textSecondary}>
-            {subtitle}
-          </AppText>
-        ) : null}
+          ) : null}
+          {demoInline ? (
+            <View style={styles.screenTitleRow}>
+              <AppText
+                variant="display"
+                numberOfLines={1}
+                style={styles.screenTitle}
+              >
+                {title}
+              </AppText>
+              {showDemo ? (
+                <View
+                  accessible
+                  accessibilityRole="text"
+                  accessibilityLabel={formatDemoDay(day)}
+                  style={[
+                    styles.demoBadge,
+                    styles.demoBadgeInline,
+                    {
+                      backgroundColor: palette.surfaceRaised,
+                      borderColor: palette.border,
+                    },
+                  ]}
+                >
+                  <AppText variant="label" color={palette.textSecondary}>
+                    DEMO
+                  </AppText>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+          {!demoInline ? <AppText variant="display">{title}</AppText> : null}
+          {showDemo && !demoInline ? (
+            <View
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={formatDemoDay(day)}
+              style={[
+                styles.demoBadge,
+                {
+                  backgroundColor: palette.surfaceRaised,
+                  borderColor: palette.border,
+                },
+              ]}
+            >
+              <AppText variant="label" color={palette.textSecondary}>
+                {formatDemoDay(day)}
+              </AppText>
+            </View>
+          ) : null}
+          {subtitle ? (
+            <AppText variant="body" color={palette.textSecondary}>
+              {subtitle}
+            </AppText>
+          ) : null}
+        </View>
+        {right ? <View style={styles.screenRight}>{right}</View> : null}
       </View>
-      {right ? <View style={styles.screenRight}>{right}</View> : null}
     </View>
   );
 }
@@ -451,12 +488,24 @@ const styles = StyleSheet.create({
   },
   pageTitleCopy: { flex: 1, gap: 6 },
   screenHeader: {
+    gap: 2,
+  },
+  screenHeaderMain: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
   },
-  screenBack: { minWidth: 44, minHeight: 44, paddingHorizontal: 6 },
+  screenBack: {
+    alignSelf: "flex-start",
+    minWidth: 44,
+    width: 44,
+    minHeight: 44,
+    height: 44,
+    paddingHorizontal: 0,
+  },
   screenHeaderCopy: { flex: 1, gap: 4 },
+  screenTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  screenTitle: { flexShrink: 1 },
   screenRight: { alignItems: "flex-end" },
   demoBadge: {
     alignSelf: "flex-start",
@@ -464,5 +513,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
+  },
+  demoBadgeInline: {
+    alignSelf: "center",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
   },
 });

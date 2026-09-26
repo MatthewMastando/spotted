@@ -8,16 +8,24 @@ export function makePath(
   width: number,
   height: number,
   domainValues: string[] = values,
+  horizontalInset = 0,
 ): string {
   const numbers = values.map(Number).filter(Number.isFinite);
   const domain = domainValues.map(Number).filter(Number.isFinite);
-  if (numbers.length < 2 || width <= 0 || height <= 0) return "";
+  if (
+    numbers.length < 2 ||
+    width <= horizontalInset * 2 ||
+    height <= 0
+  )
+    return "";
   const min = Math.min(...domain);
   const max = Math.max(...domain);
   const range = max - min || 1;
+  const plotWidth = width - horizontalInset * 2;
   return numbers
     .map((value, index) => {
-      const x = (index / (numbers.length - 1)) * width;
+      const x =
+        horizontalInset + (index / (numbers.length - 1)) * plotWidth;
       const y = height - ((value - min) / range) * (height - 8) - 4;
       return `${index === 0 ? "M" : "L"} ${x} ${y}`;
     })
@@ -82,7 +90,7 @@ export function EquityChart({
   const onLayout = (event: LayoutChangeEvent) =>
     setWidth(event.nativeEvent.layout.width);
   const domainValues = baseline ? [...values, baseline] : values;
-  const path = makePath(values, width, height, domainValues);
+  const path = makePath(values, width, height, domainValues, 4);
   const numericValues = domainValues.map(Number).filter(Number.isFinite);
   const min = Math.min(...numericValues);
   const max = Math.max(...numericValues);

@@ -69,6 +69,12 @@ export function formatPercent(value: string | null): string {
   return `${D(percent).gte(0) ? "+" : ""}${percent}%`;
 }
 
+export function formatRate(value: string | null, decimalPlaces = 2): string {
+  if (value === null) return UNAVAILABLE;
+  const percent = D(value).mul(100).toDecimalPlaces(decimalPlaces).toFixed(decimalPlaces);
+  return `${groupThousands(percent)}%`;
+}
+
 export function formatApplicable(
   value: string | null,
   applicable: boolean,
