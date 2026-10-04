@@ -72,6 +72,14 @@ export async function shareImage(
     ) {
       return "cancelled";
     }
+    if (
+      reason &&
+      typeof reason === "object" &&
+      "name" in reason &&
+      reason.name === "NotAllowedError"
+    ) {
+      return "unavailable";
+    }
     throw reason;
   }
 }

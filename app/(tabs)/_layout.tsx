@@ -1,9 +1,12 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePalette } from "@/design/theme";
 
 export default function TabLayout() {
   const palette = usePalette();
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
@@ -13,8 +16,13 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: palette.background,
           borderTopColor: palette.separator,
+          ...(Platform.OS === "web" ? { height: 64 + insets.bottom } : {}),
         },
-        tabBarLabelStyle: { fontFamily: "Inter_600SemiBold", fontSize: 11 },
+        tabBarLabelStyle: {
+          fontFamily: "Inter_600SemiBold",
+          fontSize: 11,
+          ...(Platform.OS === "web" ? { lineHeight: 16 } : {}),
+        },
         sceneStyle: { backgroundColor: palette.background },
       }}
     >
