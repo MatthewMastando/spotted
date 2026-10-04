@@ -29,6 +29,20 @@ npx expo export --platform android
 `android/` directories are intentionally ignored; configure native changes through app config and
 Expo config plugins.
 
+## Web (mobile browser)
+
+Use the same Expo app in a mobile browser:
+
+```sh
+npm run web
+npm run web:build && npm run web:serve
+```
+
+The static preview runs at `http://localhost:8090`. Production hosting must serve the COOP and
+COEP headers in `public/_headers` and use HTTPS to enable cross-origin isolation and browser SQLite.
+Web data is stored locally in that browser using OPFS and is separate from native app data. The
+experience works best in recent Safari and Chrome versions.
+
 ## Reviewer walkthrough
 
 1. **Discover and save:** Choose a few interests during onboarding, then swipe or use Pass and Save

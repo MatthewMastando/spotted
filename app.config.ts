@@ -22,8 +22,26 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#10130D",
     },
   },
+  web: {
+    ...config.web,
+    bundler: "metro",
+    output: "single",
+    name: brand.name,
+    shortName: brand.name,
+    themeColor: "#10130D",
+    backgroundColor: "#10130D",
+    favicon: "./assets/images/icon.png",
+  },
   plugins: [
-    "expo-router",
+    [
+      "expo-router",
+      {
+        headers: {
+          "Cross-Origin-Embedder-Policy": "require-corp",
+          "Cross-Origin-Opener-Policy": "same-origin",
+        },
+      },
+    ],
     "./plugins/withSceneLifecycle",
     "expo-sqlite",
     "expo-sharing",

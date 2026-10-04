@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View, useColorScheme } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Text,
+  View,
+  useColorScheme,
+} from "react-native";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -123,7 +129,22 @@ function AppShell({
         >
           <ContainerProvider value={container}>
             <StatusBar style={palette === palettes.light ? "dark" : "light"} />
-            <RouteTree settings={settings} />
+            {Platform.OS === "web" ? (
+              <View style={{ flex: 1, backgroundColor: palette.background }}>
+                <View
+                  style={{
+                    flex: 1,
+                    width: "100%",
+                    maxWidth: 480,
+                    alignSelf: "center",
+                  }}
+                >
+                  <RouteTree settings={settings} />
+                </View>
+              </View>
+            ) : (
+              <RouteTree settings={settings} />
+            )}
           </ContainerProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>

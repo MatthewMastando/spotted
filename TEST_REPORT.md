@@ -8,6 +8,8 @@
 - `npx expo install --check` — passed; dependencies are up to date.
 - `npx expo export --platform ios` — passed; iOS bundle exported to ignored `dist/`.
 - `npx expo export --platform android` — passed; Android bundle exported to ignored `dist/`.
+- `npx expo export --platform web` — passed; Metro generated web entry and worker bundles and included the SQLite WASM asset (621 KB). The exported `dist/index.html` contains the requested PWA metadata and CSS from `public/index.html`.
+- `npm run web:serve` — passed; `/` and `/asset/MSFT` returned HTTP 200 with COOP, COEP, and CORP headers, and the SQLite WASM asset was served as `application/wasm`.
 - `git diff --check` — passed.
 
 ## Simulator and Maestro
