@@ -8,12 +8,13 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: palette.accent,
+        tabBarActiveTintColor: palette.text,
         tabBarInactiveTintColor: palette.textMuted,
         tabBarStyle: {
-          backgroundColor: palette.surface,
-          borderTopColor: palette.border,
+          backgroundColor: palette.background,
+          borderTopColor: palette.separator,
         },
+        tabBarLabelStyle: { fontFamily: "Inter_600SemiBold", fontSize: 11 },
         sceneStyle: { backgroundColor: palette.background },
       }}
     >

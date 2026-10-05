@@ -6,7 +6,7 @@ appId: com.swipefolio.app
     direction: DOWN
 - tapOn: "Run Losing pick scenario"
 - assertVisible: "Portfolio"
-- assertVisible: "Paper P&L"
+- assertVisible: "Paper P&L:.*"
 - scrollUntilVisible:
     element: "ADA"
     direction: DOWN

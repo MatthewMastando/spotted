@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import type { ThemeId } from "@/domain/types";
 import { usePalette } from "@/design/theme";
-import { ActionButton, AppText, Chip, Page, Panel } from "@/components/ui";
+import { ActionButton, AppText, Chip, Page, Section, InlineNotice } from "@/components/ui";
 import { THEME_LABELS } from "@/features/common/labels";
 import { useContainer } from "@/services/ContainerContext";
 import { runScenario } from "@/services/scenarios";
@@ -92,16 +92,33 @@ export function OnboardingScreen() {
   }
 
   return (
-    <Page contentStyle={styles.content}>
+    <Page
+      contentStyle={styles.content}
+      footer={
+        <ActionButton
+          accessibilityLabel="Continue to Discover"
+          accessibilityHint="Save your selected interests and open the app"
+          loading={pending}
+          disabled={pending}
+          onPress={() => void continueOnboarding(false)}
+          style={styles.continueButton}
+        >
+          Continue to Discover
+        </ActionButton>
+      }
+    >
       <View style={styles.brand}>
-        <View style={[styles.mark, { backgroundColor: palette.accent }]}>
-          <AppText variant="title" color={palette.background}>
+        <View style={[styles.mark, { backgroundColor: palette.surfaceRaised }]}>
+          <AppText variant="title" color={palette.text}>
             S
           </AppText>
         </View>
-        <AppText variant="label" color={palette.textSecondary}>
-          SWIPEFOLIO · A PAPER INVESTING PLAYGROUND
-        </AppText>
+        <View style={styles.brandCopy}>
+          <AppText variant="headline">Swipefolio</AppText>
+          <AppText variant="caption" color={palette.textSecondary}>
+            A paper investing playground
+          </AppText>
+        </View>
       </View>
 
       <View style={styles.intro}>
@@ -130,13 +147,10 @@ export function OnboardingScreen() {
         />
       </View>
 
-      <Panel style={styles.interestsPanel}>
-        <View style={styles.interestHeading}>
-          <AppText variant="title">What are you curious about?</AppText>
-          <AppText variant="small" color={palette.textSecondary}>
-            Pick a few topics to shape your first deck. You can change them later.
-          </AppText>
-        </View>
+      <Section title="What are you curious about?">
+        <AppText variant="small" color={palette.textSecondary}>
+          Pick a few topics to shape your first deck. You can change them later.
+        </AppText>
         <View style={styles.chips}>
           {INTERESTS.map((interest) => (
             <Chip
@@ -148,29 +162,17 @@ export function OnboardingScreen() {
             />
           ))}
         </View>
-        <View style={styles.primaryActions}>
-          <ActionButton
-            variant="secondary"
-            accessibilityLabel="Continue to Discover"
-            accessibilityHint="Save your selected interests and open the app"
-            disabled={pending}
-            onPress={() => void continueOnboarding(false)}
-            style={styles.equalButton}
-          >
-            Continue
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            accessibilityLabel="Skip interests and continue"
-            accessibilityHint="Continue without selecting interests"
-            disabled={pending}
-            onPress={() => void continueOnboarding(true)}
-            style={styles.equalButton}
-          >
-            Skip
-          </ActionButton>
-        </View>
-      </Panel>
+        <ActionButton
+          variant="quiet"
+          accessibilityLabel="Skip interests and continue"
+          accessibilityHint="Continue without selecting interests"
+          disabled={pending}
+          onPress={() => void continueOnboarding(true)}
+          style={styles.skipButton}
+        >
+          Skip
+        </ActionButton>
+      </Section>
 
       <ActionButton
         variant="secondary"
@@ -185,13 +187,7 @@ export function OnboardingScreen() {
         Every price and result is synthetic demo data. This app does not offer
         investment advice or place trades.
       </AppText>
-      {error ? (
-        <Panel style={styles.errorPanel}>
-          <AppText variant="small" color={palette.negative}>
-            {error}
-          </AppText>
-        </Panel>
-      ) : null}
+      {error ? <InlineNotice>{error}</InlineNotice> : null}
     </Page>
   );
 }
@@ -208,7 +204,7 @@ function JourneyStep({
   const palette = usePalette();
   return (
     <View style={styles.step}>
-      <AppText variant="label" color={palette.accent} style={styles.stepNumber}>
+      <AppText variant="caption" color={palette.textMuted} style={styles.stepNumber}>
         {number}
       </AppText>
       <View style={styles.stepCopy}>
@@ -222,8 +218,9 @@ function JourneyStep({
 }
 
 const styles = StyleSheet.create({
-  content: { paddingTop: 66, gap: 24 },
+  content: { paddingTop: 32, gap: 28 },
   brand: { flexDirection: "row", alignItems: "center", gap: 12 },
+  brandCopy: { gap: 1 },
   mark: {
     width: 44,
     height: 44,
@@ -240,11 +237,8 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   stepCopy: { flex: 1, gap: 2 },
-  interestsPanel: { gap: 16 },
-  interestHeading: { gap: 4 },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  primaryActions: { flexDirection: "row", gap: 10 },
-  equalButton: { flex: 1 },
+  skipButton: { alignSelf: "flex-start" },
+  continueButton: { width: "100%" },
   footnote: { textAlign: "center" },
-  errorPanel: { borderColor: "transparent" },
 });

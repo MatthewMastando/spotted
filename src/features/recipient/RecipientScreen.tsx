@@ -3,9 +3,21 @@ import { StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { formatDate, formatPrice } from "@/domain/format";
 import { usePalette } from "@/design/theme";
-import { ActionButton, AppText, Chip, InlineNotice, Page, Panel } from "@/components/ui";
+import {
+  ActionButton,
+  AppText,
+  Chip,
+  InlineNotice,
+  Page,
+  Panel,
+  ScreenHeader,
+} from "@/components/ui";
 import { Sparkline } from "@/components/Chart";
-import { TYPE_LABELS, THEME_LABELS, quoteAsOfLabel } from "@/features/common/labels";
+import {
+  TYPE_LABELS,
+  THEME_LABELS,
+  quoteAsOfLabel,
+} from "@/features/common/labels";
 import { useContainer } from "@/services/ContainerContext";
 import { createId } from "@/services/ids";
 import { trackEvent } from "@/services/track";
@@ -45,19 +57,23 @@ export function RecipientScreen() {
   if (!asset || !quote) {
     return (
       <Page>
-        <ActionButton
-          variant="quiet"
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-        >
-          ← Back
-        </ActionButton>
-        <Panel>
+        <ScreenHeader
+          title="Recipient"
+          onBack={() => router.back()}
+        />
+        <View style={styles.unavailable}>
           <AppText variant="title">That idea is unavailable</AppText>
           <AppText variant="body" color={palette.textSecondary}>
             This sample link does not point to an asset in the demo universe.
           </AppText>
-        </Panel>
+          <ActionButton
+            variant="secondary"
+            accessibilityLabel="Open Discover"
+            onPress={() => router.replace("/(tabs)")}
+          >
+            Open Discover
+          </ActionButton>
+        </View>
       </Page>
     );
   }
@@ -89,15 +105,12 @@ export function RecipientScreen() {
 
   return (
     <Page>
-      <ActionButton
-        variant="quiet"
-        accessibilityLabel="Go back"
-        onPress={() => router.back()}
-      >
-        ← Back
-      </ActionButton>
+      <ScreenHeader
+        title={asset.ticker}
+        onBack={() => router.back()}
+      />
       <View style={styles.friendLabel}>
-        <AppText variant="label" color={palette.accent}>
+        <AppText variant="caption" color={palette.textSecondary}>
           A friend spotted {asset.ticker}
         </AppText>
         <AppText variant="display">A sample idea worth a closer look.</AppText>
@@ -110,44 +123,49 @@ export function RecipientScreen() {
       <Panel style={styles.preview}>
         <View style={styles.previewHeader}>
           <View style={[styles.icon, { backgroundColor: asset.iconColor }]}>
-            <AppText variant="label" color="#10130D">
+            <AppText
+              variant="label"
+              color="#10130D"
+              maxFontSizeMultiplier={1}
+            >
               {asset.iconInitials}
             </AppText>
           </View>
           <View style={styles.previewCopy}>
             <AppText variant="title">{asset.name}</AppText>
-            <AppText variant="small" color={palette.textSecondary}>
+            <AppText
+              variant="small"
+              color={palette.textSecondary}
+              numberOfLines={1}
+            >
               {asset.ticker} · {TYPE_LABELS[asset.type]}
+              {asset.themes[0] ? ` · ${THEME_LABELS[asset.themes[0]]}` : ""}
             </AppText>
           </View>
-          <Chip label="SAMPLE" selected />
-        </View>
-        <View style={styles.themeRow}>
-          {asset.themes.map((theme) => (
-            <Chip key={theme} label={THEME_LABELS[theme]} />
-          ))}
+          <Chip label="Sample" selected={false} />
         </View>
         <AppText variant="body">{asset.description}</AppText>
-        <AppText variant="body" color={palette.accent}>
+        <AppText variant="body">
           {asset.thesis}
         </AppText>
-        <View style={styles.priceRow}>
-          <View>
-            <AppText variant="display">
-              {price ? formatPrice(price) : "Price unavailable"}
-            </AppText>
-            <AppText variant="small" color={palette.textSecondary}>
-              USD · {quoteAsOfLabel(quote)}
-            </AppText>
-          </View>
-          {social ? (
+        <View style={styles.priceBlock}>
+          <AppText variant="display">
+            {price ? formatPrice(price) : "Price unavailable"}
+          </AppText>
+          <AppText variant="small" color={palette.textSecondary}>
+            USD · {quoteAsOfLabel(quote)}
+          </AppText>
+        </View>
+        {social ? (
+          <View style={styles.sparklineContainer}>
             <Sparkline
               values={social.history.map((point) => String(point.count))}
               color={palette.accent}
               label={`Sample attention history for ${asset.ticker}`}
+              height={28}
             />
-          ) : null}
-        </View>
+          </View>
+        ) : null}
         <AppText variant="small" color={palette.textMuted}>
           Mock data · as of {formatDate(quote.quoteTime)} · Simulated
         </AppText>
@@ -178,9 +196,22 @@ export function RecipientScreen() {
           {alreadySaved ? "Saved" : "Save idea"}
         </ActionButton>
       </View>
-      {price === null ? (
+      {price === null || quote.freshness === "stale" || quote.freshness === "unavailable" ? (
         <InlineNotice>
-          This sample cannot be saved while its price is unavailable.
+          <View style={styles.recoveryNotice}>
+            <AppText variant="small" color={palette.textSecondary}>
+              {price === null
+                ? "This sample cannot be saved while its price is unavailable."
+                : "This sample quote is stale or unavailable."}
+            </AppText>
+            <ActionButton
+              variant="quiet"
+              accessibilityLabel="Open Discover"
+              onPress={() => router.replace("/(tabs)")}
+            >
+              Open Discover
+            </ActionButton>
+          </View>
         </InlineNotice>
       ) : null}
       {message ? <InlineNotice>{message}</InlineNotice> : null}
@@ -189,6 +220,7 @@ export function RecipientScreen() {
 }
 
 const styles = StyleSheet.create({
+  unavailable: { gap: 12, paddingVertical: 24 },
   friendLabel: { gap: 8 },
   preview: { gap: 16, padding: 20 },
   previewHeader: {
@@ -204,8 +236,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   previewCopy: { flex: 1, gap: 3 },
-  themeRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  priceRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  priceBlock: { gap: 3 },
+  sparklineContainer: { width: "100%", minWidth: 0, overflow: "hidden" },
+  recoveryNotice: { gap: 8 },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   action: { flexGrow: 1, flexBasis: "40%" },
 });
