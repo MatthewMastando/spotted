@@ -18,3 +18,5 @@
   exclusions. They do not add tracking URLs or QR codes.
 - The mixed-portfolio onboarding journey is a prebuilt sample, explicitly distinguished from a
   user's own track record in the app and its share output.
+- The mobile web build uses the same Expo codebase, with a phone-width column on desktop and
+  Web Share API image sharing where supported plus a download fallback.

@@ -172,6 +172,18 @@ describe("persisted services", () => {
     await action;
   });
 
+  test("undoing the first deck pass preserves starter ordering", async () => {
+    const before = await container.deck.getItems();
+    await container.deck.pass(before[0].asset.id, "a1");
+
+    expect(await container.savedIdeas.undoLatest()).toEqual({ undone: true });
+
+    const after = await container.deck.getItems();
+    expect(after.map((item) => item.asset.id).slice(0, 3)).toEqual(
+      before.map((item) => item.asset.id).slice(0, 3),
+    );
+  });
+
   test("a losing position remains negative after a full close and close retries are idempotent", async () => {
     await container.portfolio.confirmAllocation("ada-review", [
       { assetId: "cry_ada", amount: "1000.00" },

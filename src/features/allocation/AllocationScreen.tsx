@@ -192,7 +192,13 @@ export function AllocationScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.root, { backgroundColor: palette.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={
+        Platform.OS === "ios"
+          ? "padding"
+          : Platform.OS === "android"
+            ? "height"
+            : undefined
+      }
     >
       <Page
         contentStyle={styles.content}

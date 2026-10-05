@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Image as NativeImage,
-  PixelRatio,
   StyleSheet,
+  Platform,
   useWindowDimensions,
   View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Clipboard from "expo-clipboard";
-import * as MediaLibrary from "expo-media-library/legacy";
-import * as Sharing from "expo-sharing";
-import { captureRef } from "react-native-view-shot";
 import type { ShareSnapshot } from "@/domain/types";
 import {
   buildIdeaShareSnapshot,
@@ -40,6 +36,13 @@ import {
   shareThemeColors,
 } from "./ShareCard";
 import { useContainer } from "@/services/ContainerContext";
+import {
+  SAVE_SUCCESS_MESSAGE,
+  captureCard,
+  isShareAvailable,
+  saveImage,
+  shareImage,
+} from "@/services/imageExport";
 import { createId } from "@/services/ids";
 import { trackEvent } from "@/services/track";
 import { successHaptic } from "@/services/haptics";
@@ -65,6 +68,9 @@ export function ShareScreen() {
   const [hideAmounts, setHideAmounts] = useState(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [prepared, setPrepared] = useState<{ key: string; uri: string } | null>(
+    null,
+  );
   const captureTarget = useRef<View>(null);
   const [previewFrameWidth, setPreviewFrameWidth] = useState(0);
   const { height: windowHeight } = useWindowDimensions();
@@ -167,6 +173,17 @@ export function ShareScreen() {
         : null,
     [baseSnapshot, hideAmounts, theme],
   );
+  const captureKey = baseSnapshot
+    ? JSON.stringify([
+        layout,
+        theme,
+        hideAmounts,
+        baseSnapshot.id,
+        baseSnapshot.createdAt,
+        baseSnapshot.kind,
+        baseSnapshot.assetId,
+      ])
+    : "";
 
   useEffect(() => {
     if (baseSnapshot && !hapticFired.current) {
@@ -174,6 +191,22 @@ export function ShareScreen() {
       void successHaptic(container);
     }
   }, [baseSnapshot, container]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || !baseSnapshot) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      void captureCard(captureTarget, size)
+        .then((uri) => {
+          if (active) setPrepared({ key: captureKey, uri });
+        })
+        .catch(() => {});
+    }, 300);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [baseSnapshot, captureKey, size]);
 
   if (!snapshot) {
     return (
@@ -206,30 +239,34 @@ export function ShareScreen() {
     setMessage(null);
     try {
       const persisted = await runMutation(container, persistSnapshot);
-      const uri = await captureImage();
+      const uri =
+        prepared?.key === captureKey ? prepared.uri : await captureImage();
       if (mode === "share") {
-        if (!(await Sharing.isAvailableAsync())) {
+        if (!(await isShareAvailable(uri))) {
           setMessage("Sharing isn't available on this device. Use Save image instead.");
         } else {
           await trackEvent(container, "share_sheet_opened", {
             kind: persisted.kind,
             layout,
           });
-          await Sharing.shareAsync(uri, {
-            mimeType: "image/png",
-            UTI: "public.png",
+          const outcome = await shareImage(uri, {
             dialogTitle: "Share your Swipefolio result",
           });
-          setMessage("Share sheet opened.");
+          setMessage(
+            outcome === "shared"
+              ? "Share sheet opened."
+              : outcome === "cancelled"
+                ? "Share cancelled."
+                : "Sharing isn't available on this device. Use Save image instead.",
+          );
         }
       } else {
-        const permission = await MediaLibrary.requestPermissionsAsync();
-        if (!permission.granted) {
+        const outcome = await saveImage(uri);
+        if (outcome === "denied") {
           setMessage("Photo access was denied. Enable it in Settings to save the image.");
           return;
         }
-        await MediaLibrary.createAssetAsync(uri);
-        setMessage("Saved image to your photo library.");
+        setMessage(SAVE_SUCCESS_MESSAGE);
       }
       await trackEvent(container, "export_generated", {
         kind: persisted.kind,
@@ -245,21 +282,7 @@ export function ShareScreen() {
   }
 
   async function captureImage(): Promise<string> {
-    if (!captureTarget.current) throw new Error("Card preview is not ready.");
-    const uri = await captureRef(captureTarget, {
-      format: "png",
-      quality: 1,
-      result: "tmpfile",
-      width: size.width / PixelRatio.get(),
-      height: size.height / PixelRatio.get(),
-    });
-    const dimensions = await NativeImage.getSize(uri);
-    if (dimensions.width !== size.width || dimensions.height !== size.height) {
-      throw new Error(
-        `Export dimensions were ${dimensions.width}×${dimensions.height}; expected ${size.width}×${size.height}.`,
-      );
-    }
-    return uri;
+    return captureCard(captureTarget, size);
   }
 
   async function copyCaption() {

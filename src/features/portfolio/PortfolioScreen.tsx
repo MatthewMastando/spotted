@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Alert, Modal, StyleSheet, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Holding } from "@/domain/ledger";
@@ -31,6 +31,7 @@ import {
 import { TYPE_LABELS, quoteAsOfLabel, THEME_LABELS } from "@/features/common/labels";
 import { usePalette } from "@/design/theme";
 import { useContainer } from "@/services/ContainerContext";
+import { confirmAction } from "@/services/confirm";
 import { trackEvent } from "@/services/track";
 import { successHaptic } from "@/services/haptics";
 import { runMutation } from "@/state/appStore";
@@ -144,31 +145,24 @@ export function PortfolioScreen() {
     if (!asset) return;
     const quote = container.market.getQuote(assetId, day);
     if (!fillBasisForQuote(quote) || !quote.price) return;
-    Alert.alert(
-      `Close ${asset.ticker}?`,
-      `This sells the whole paper position at ${formatPrice(quote.price)} (${quoteAsOfLabel(quote)}).`,
-      [
-        { text: "Keep position", style: "cancel" },
-        {
-          text: "Close position",
-          style: "destructive",
-          onPress: () => {
-            void (async () => {
-              setClosingId(assetId);
-              try {
-                await runMutation(container, () =>
-                  container.portfolio.closePosition(assetId),
-                );
-                await trackEvent(container, "position_closed", { asset_id: assetId });
-                await successHaptic(container);
-              } finally {
-                setClosingId(null);
-              }
-            })();
-          },
-        },
-      ],
-    );
+    const confirmed = await confirmAction({
+      title: `Close ${asset.ticker}?`,
+      message: `This sells the whole paper position at ${formatPrice(quote.price)} (${quoteAsOfLabel(quote)}).`,
+      confirmLabel: "Close position",
+      cancelLabel: "Keep position",
+      destructive: true,
+    });
+    if (!confirmed) return;
+    setClosingId(assetId);
+    try {
+      await runMutation(container, () =>
+        container.portfolio.closePosition(assetId),
+      );
+      await trackEvent(container, "position_closed", { asset_id: assetId });
+      await successHaptic(container);
+    } finally {
+      setClosingId(null);
+    }
   }
 
   const invested = ledger.holdings
