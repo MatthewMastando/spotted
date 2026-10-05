@@ -70,7 +70,7 @@ export class DeckActionRepository {
 
   async hasActions(): Promise<boolean> {
     const row = await this.db.getFirstAsync<{ count: number }>(
-      "SELECT COUNT(*) AS count FROM deck_actions",
+      "SELECT COUNT(*) AS count FROM deck_actions WHERE undone = 0",
     );
     return (row?.count ?? 0) > 0;
   }
